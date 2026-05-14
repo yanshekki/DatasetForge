@@ -1,0 +1,48 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  datasets Dataset[]
+}
+
+model Dataset {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String?  @db.Text
+  taskType    String?  
+  tags        Json?    
+  isPublic    Boolean  @default(false)
+  ownerId     Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  owner    User             @relation(fields: [ownerId], references: [id])
+  versions DatasetVersion[]
+}
+
+model DatasetVersion {
+  id          Int      @id @default(autoincrement())
+  datasetId   Int
+  version     String   
+  description String?
+  filePath    String?  
+  size        BigInt?  
+  rowCount    Int?
+  metadata    Json?    
+  createdAt   DateTime @default(now())
+
+  dataset Dataset @relation(fields: [datasetId], references: [id])
+}
