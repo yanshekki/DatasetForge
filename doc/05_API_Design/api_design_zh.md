@@ -92,7 +92,7 @@
 ### 4.4 Upload（上傳）
 
 | 方法 | Endpoint                        | 說明                     | 認證 |
-|------|---------------------------------|--------------------------|------|
+|------|---------------------------------|------------------------------------------------|------|
 | POST | `/upload/presigned-url`         | 取得上傳用的 Presigned URL | 是   |
 | POST | `/upload/complete`              | 上傳完成後通知後端       | 是   |
 
@@ -182,3 +182,7 @@ POST /api/v1/upload/presigned-url
 ---
 
 **文件結束**
+
+---
+
+<sub>Powered by [YSK Limited](https://ysk.hk/) — Hong Kong Remote Dev Team & Enterprise Solutions</sub>
