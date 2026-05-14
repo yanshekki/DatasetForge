@@ -182,3 +182,7 @@ All major design documents are now complete. Additional documents (testing strat
 ---
 
 **End of Document**
+
+---
+
+<sub>Powered by [YSK Limited](https://ysk.hk/) — Hong Kong Remote Dev Team & Enterprise Solutions</sub>
