@@ -1,7 +1,7 @@
 # DatasetForge - 項目概述
 
 **文件版本：** 1.0  
-**最後更新：** 2026-05-14  
+**最後更新：** 2026-05-15  
 **負責人：** Ki
 
 ---
@@ -96,3 +96,7 @@ DatasetForge 的核心目標是成為一個**專業的 AI 訓練數據全生命�
 ---
 
 **文件結束**
+
+---
+
+<sub>Powered by [YSK Limited](https://ysk.hk/) — Hong Kong Remote Dev Team & Enterprise Solutions</sub>
