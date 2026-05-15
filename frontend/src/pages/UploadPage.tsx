@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Typography, Container, Button, TextField, Box, LinearProgress, Alert } from '@mui/material'
+import { Typography, Container, Button, TextField, Box, LinearProgress, Alert, Paper } from '@mui/material'
 import api from '../api/axios'
 import { useSnackbar } from 'notistack'
 import { useNavigate } from 'react-router-dom'
@@ -57,11 +57,11 @@ export default function UploadPage() {
       })
 
       setSuccess(true)
-      enqueueSnackbar('Upload successful!', { variant: 'success' })
+      enqueueSnackbar('File uploaded successfully!', { variant: 'success' })
       setProgress(0)
       setFile(null)
     } catch (err) {
-      enqueueSnackbar('Upload failed. Please try again.', { variant: 'error' })
+      enqueueSnackbar('Upload failed. Please check your inputs and try again.', { variant: 'error' })
     } finally {
       setUploading(false)
     }
@@ -70,36 +70,45 @@ export default function UploadPage() {
   return (
     <Container maxWidth="sm">
       <Typography variant="h4" gutterBottom>Upload File</Typography>
+      <Typography color="text.secondary" sx={{ mb: 3 }}>
+        Upload new versions of your datasets securely.
+      </Typography>
 
-      {success && (
-        <Alert severity="success" sx={{ mb: 2 }}>
-          Upload completed successfully! 
-          <Button size="small" onClick={() => navigate(`/datasets/${datasetId}`)}>View Dataset</Button>
-        </Alert>
-      )}
+      <Paper sx={{ p: 3 }} elevation={2}>
+        {success && (
+          <Alert severity="success" sx={{ mb: 3 }}>
+            Upload completed! 
+            <Button size="small" onClick={() => navigate(`/datasets/${datasetId}`)}>Go to Dataset</Button>
+          </Alert>
+        )}
 
-      <Box display="flex" flexDirection="column" gap={2}>
-        <TextField label="Dataset ID" value={datasetId} onChange={e => setDatasetId(e.target.value)} />
-        <TextField label="Version" value={version} onChange={e => setVersion(e.target.value)} />
+        <Box display="flex" flexDirection="column" gap={2.5}>
+          <TextField label="Dataset ID" value={datasetId} onChange={e => setDatasetId(e.target.value)} fullWidth />
+          <TextField label="Version Tag" value={version} onChange={e => setVersion(e.target.value)} fullWidth />
 
-        <Button variant="outlined" component="label">
-          Select File
-          <input type="file" hidden onChange={handleFileChange} />
-        </Button>
+          <Button variant="outlined" component="label" size="large">
+            Choose File
+            <input type="file" hidden onChange={handleFileChange} />
+          </Button>
 
-        {file && <Typography variant="body2">Selected: {file.name} ({(file.size / 1024 / 1024).toFixed(2)} MB)</Typography>}
+          {file && (
+            <Typography variant="body2" color="text.secondary">
+              Selected: {file.name} ({(file.size / 1024 / 1024).toFixed(2)} MB)
+            </Typography>
+          )}
 
-        <Button 
-          variant="contained" 
-          onClick={uploadFile} 
-          disabled={uploading || !file || !datasetId}
-          size="large"
-        >
-          {uploading ? 'Uploading...' : 'Upload to Dataset'}
-        </Button>
+          <Button 
+            variant="contained" 
+            onClick={uploadFile} 
+            disabled={uploading || !file || !datasetId}
+            size="large"
+          >
+            {uploading ? `Uploading... ${progress}%` : 'Upload File'}
+          </Button>
 
-        {uploading && <LinearProgress variant="determinate" value={progress} />}
-      </Box>
+          {uploading && <LinearProgress variant="determinate" value={progress} />}
+        </Box>
+      </Paper>
     </Container>
   )
 }
