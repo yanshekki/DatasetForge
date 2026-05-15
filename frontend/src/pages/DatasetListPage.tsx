@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Typography, Container, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Dialog, DialogTitle, DialogContent, TextField, DialogActions, CircularProgress } from '@mui/material'
+import { Typography, Container, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Dialog, DialogTitle, DialogContent, TextField, DialogActions, CircularProgress, Box } from '@mui/material'
 import { Add } from '@mui/icons-material'
 import { useNavigate } from 'react-router-dom'
 import api from '../api/axios'
@@ -26,9 +26,13 @@ export default function DatasetListPage() {
   }
 
   const createDataset = async () => {
+    if (!newDataset.name) {
+      enqueueSnackbar('Dataset name is required', { variant: 'warning' })
+      return
+    }
     try {
       await api.post('/datasets', newDataset)
-      enqueueSnackbar('Dataset created successfully', { variant: 'success' })
+      enqueueSnackbar('Dataset created successfully!', { variant: 'success' })
       setOpen(false)
       setNewDataset({ name: '', description: '' })
       fetchDatasets()
@@ -43,13 +47,21 @@ export default function DatasetListPage() {
 
   return (
     <Container>
-      <Typography variant="h4" gutterBottom>Datasets</Typography>
-      <Button variant="contained" startIcon={<Add />} onClick={() => setOpen(true)} sx={{ mb: 2 }}>
-        Create Dataset
-      </Button>
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+        <Typography variant="h4">Datasets</Typography>
+        <Button variant="contained" startIcon={<Add />} onClick={() => setOpen(true)}>
+          Create Dataset
+        </Button>
+      </Box>
 
       {loading ? (
-        <CircularProgress />
+        <Box display="flex" justifyContent="center" mt={4}>
+          <CircularProgress />
+        </Box>
+      ) : datasets.length === 0 ? (
+        <Typography color="text.secondary" sx={{ mt: 4 }}>
+          No datasets yet. Create your first dataset to get started.
+        </Typography>
       ) : (
         <TableContainer component={Paper}>
           <Table>
@@ -58,17 +70,19 @@ export default function DatasetListPage() {
                 <TableCell>Name</TableCell>
                 <TableCell>Description</TableCell>
                 <TableCell>Created</TableCell>
-                <TableCell>Action</TableCell>
+                <TableCell align="right">Action</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {datasets.map((ds) => (
                 <TableRow key={ds.id} hover onClick={() => navigate(`/datasets/${ds.id}`)} style={{ cursor: 'pointer' }}>
                   <TableCell>{ds.name}</TableCell>
-                  <TableCell>{ds.description}</TableCell>
+                  <TableCell>{ds.description || '-'}</TableCell>
                   <TableCell>{new Date(ds.createdAt).toLocaleDateString()}</TableCell>
-                  <TableCell>
-                    <Button size="small" onClick={(e) => { e.stopPropagation(); navigate(`/datasets/${ds.id}`) }}>View</Button>
+                  <TableCell align="right">
+                    <Button size="small" onClick={(e) => { e.stopPropagation(); navigate(`/datasets/${ds.id}`) }}>
+                      View
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))}
@@ -77,15 +91,30 @@ export default function DatasetListPage() {
         </TableContainer>
       )}
 
-      <Dialog open={open} onClose={() => setOpen(false)}>
+      <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="sm">
         <DialogTitle>Create New Dataset</DialogTitle>
         <DialogContent>
-          <TextField fullWidth label="Name" margin="normal" value={newDataset.name} onChange={e => setNewDataset({...newDataset, name: e.target.value})} />
-          <TextField fullWidth label="Description" margin="normal" value={newDataset.description} onChange={e => setNewDataset({...newDataset, description: e.target.value})} />
+          <TextField 
+            fullWidth 
+            label="Dataset Name" 
+            margin="normal" 
+            value={newDataset.name} 
+            onChange={e => setNewDataset({...newDataset, name: e.target.value})} 
+            required
+          />
+          <TextField 
+            fullWidth 
+            label="Description (optional)" 
+            margin="normal" 
+            multiline
+            rows={3}
+            value={newDataset.description} 
+            onChange={e => setNewDataset({...newDataset, description: e.target.value})} 
+          />
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setOpen(false)}>Cancel</Button>
-          <Button variant="contained" onClick={createDataset}>Create</Button>
+          <Button variant="contained" onClick={createDataset}>Create Dataset</Button>
         </DialogActions>
       </Dialog>
     </Container>
