@@ -10,6 +10,7 @@ import uploadRoutes from './modules/upload/upload.route';
 import activityLogRoutes from './modules/activity-log/activity-log.route';
 import teamRoutes from './modules/team/team.route';
 import { authenticateToken } from './middlewares/auth.middleware';
+import { errorHandler } from './middlewares/error.middleware';
 
 dotenv.config();
 
@@ -24,10 +25,8 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Public routes
+// Routes
 app.use('/api/auth', authRoutes);
-
-// Protected routes
 app.use('/api/datasets', authenticateToken, datasetRoutes);
 app.use('/api/datasets/:datasetId/versions', authenticateToken, datasetVersionRoutes);
 app.use('/api/upload', authenticateToken, uploadRoutes);
@@ -47,5 +46,8 @@ app.use((req, res, next) => {
   logger.info(`${req.method} ${req.url}`);
   next();
 });
+
+// Global error handler (must be last)
+app.use(errorHandler);
 
 export default app;
