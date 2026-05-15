@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import pino from 'pino';
 import dotenv from 'dotenv';
 import authRoutes from './modules/auth/auth.route';
+import datasetRoutes from './modules/dataset/dataset.route';
 
 dotenv.config();
 
@@ -20,6 +21,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/datasets', datasetRoutes);
 
 // Health check
 app.get('/health', (req, res) => {
