@@ -1,17 +1,21 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { Typography, Container, Button, List, ListItem, ListItemText, ListItemSecondaryAction, CircularProgress, Box, Paper, Chip } from '@mui/material'
-import { Download, ArrowBack } from '@mui/icons-material'
+import { Download, ArrowBack, Delete } from '@mui/icons-material'
 import api from '../api/axios'
 import { useSnackbar } from 'notistack'
+import { useAuth } from '../contexts/AuthContext'
 
 export default function DatasetDetailPage() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const { user } = useAuth()
   const [dataset, setDataset] = useState<any>(null)
   const [versions, setVersions] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const { enqueueSnackbar } = useSnackbar()
+
+  const isOwner = dataset?.ownerId === user?.id
 
   const fetchData = async () => {
     try {
@@ -69,7 +73,10 @@ export default function DatasetDetailPage() {
         Back to Datasets
       </Button>
 
-      <Typography variant="h4" gutterBottom>{dataset.name}</Typography>
+      <Box display="flex" alignItems="center" gap={2} mb={1}>
+        <Typography variant="h4">{dataset.name}</Typography>
+        {isOwner && <Chip label="Owner" color="primary" size="small" />}
+      </Box>
       <Typography color="text.secondary" gutterBottom>
         {dataset.description || 'No description provided'}
       </Typography>
@@ -117,6 +124,14 @@ export default function DatasetDetailPage() {
           </Paper>
         )}
       </Box>
+
+      {isOwner && (
+        <Box mt={4}>
+          <Typography variant="subtitle2" color="text.secondary">
+            You have owner permissions on this dataset.
+          </Typography>
+        </Box>
+      )}
     </Container>
   )
 }
