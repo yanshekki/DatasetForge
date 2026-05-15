@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { Typography, Container, Button, List, ListItem, ListItemText, ListItemSecondaryAction, CircularProgress, Box, Paper } from '@mui/material'
+import { Typography, Container, Button, List, ListItem, ListItemText, ListItemSecondaryAction, CircularProgress, Box, Paper, Chip } from '@mui/material'
 import { Download, ArrowBack } from '@mui/icons-material'
 import api from '../api/axios'
 import { useSnackbar } from 'notistack'
@@ -70,23 +70,36 @@ export default function DatasetDetailPage() {
       </Button>
 
       <Typography variant="h4" gutterBottom>{dataset.name}</Typography>
-      <Typography color="text.secondary" gutterBottom>{dataset.description || 'No description'}</Typography>
+      <Typography color="text.secondary" gutterBottom>
+        {dataset.description || 'No description provided'}
+      </Typography>
 
       <Box mt={4}>
-        <Typography variant="h6" gutterBottom>Versions ({versions.length})</Typography>
+        <Box display="flex" alignItems="center" gap={2} mb={2}>
+          <Typography variant="h6">Versions</Typography>
+          <Chip label={`${versions.length} versions`} size="small" />
+        </Box>
 
         {versions.length > 0 ? (
           <Paper elevation={1}>
             <List>
               {versions.map((v, index) => (
                 <ListItem key={v.id} divider={index !== versions.length - 1}>
-                  <ListItemText 
-                    primary={v.version} 
-                    secondary={v.description || 'No description'} 
+                  <ListItemText
+                    primary={v.version}
+                    secondary={
+                      <>
+                        {v.description || 'No description'}<br />
+                        <Typography variant="caption" color="text.secondary">
+                          Created: {new Date(v.createdAt).toLocaleString()}
+                        </Typography>
+                      </>
+                    }
                   />
                   <ListItemSecondaryAction>
-                    <Button 
-                      startIcon={<Download />} 
+                    <Button
+                      variant="outlined"
+                      startIcon={<Download />}
                       onClick={() => downloadVersion(v.version)}
                     >
                       Download
@@ -97,9 +110,11 @@ export default function DatasetDetailPage() {
             </List>
           </Paper>
         ) : (
-          <Typography color="text.secondary">
-            No versions yet. Upload files to create new versions.
-          </Typography>
+          <Paper sx={{ p: 3, textAlign: 'center' }}>
+            <Typography color="text.secondary">
+              No versions yet. Upload files to create new versions.
+            </Typography>
+          </Paper>
         )}
       </Box>
     </Container>
