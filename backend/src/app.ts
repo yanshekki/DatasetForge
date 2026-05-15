@@ -8,6 +8,7 @@ import datasetRoutes from './modules/dataset/dataset.route';
 import datasetVersionRoutes from './modules/dataset-version/dataset-version.route';
 import uploadRoutes from './modules/upload/upload.route';
 import activityLogRoutes from './modules/activity-log/activity-log.route';
+import teamRoutes from './modules/team/team.route';
 
 dotenv.config();
 
@@ -28,6 +29,7 @@ app.use('/api/datasets', datasetRoutes);
 app.use('/api/datasets/:datasetId/versions', datasetVersionRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/activity-logs', activityLogRoutes);
+app.use('/api/teams', teamRoutes);
 
 // Health check
 app.get('/health', (req, res) => {
