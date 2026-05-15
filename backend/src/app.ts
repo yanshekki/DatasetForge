@@ -11,6 +11,7 @@ import activityLogRoutes from './modules/activity-log/activity-log.route';
 import teamRoutes from './modules/team/team.route';
 import { authenticateToken } from './middlewares/auth.middleware';
 import { errorHandler } from './middlewares/error.middleware';
+import { apiLimiter } from './middlewares/rate-limit.middleware';
 
 dotenv.config();
 
@@ -24,6 +25,9 @@ app.use(helmet());
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Rate limiting
+app.use('/api/', apiLimiter);
 
 // Routes
 app.use('/api/auth', authRoutes);
@@ -47,7 +51,7 @@ app.use((req, res, next) => {
   next();
 });
 
-// Global error handler (must be last)
+// Global error handler
 app.use(errorHandler);
 
 export default app;
