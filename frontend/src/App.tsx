@@ -8,6 +8,7 @@ import DatasetDetailPage from './pages/DatasetDetailPage'
 import UploadPage from './pages/UploadPage'
 import TeamPage from './pages/TeamPage'
 import ActivityLogPage from './pages/ActivityLogPage'
+import UserProfilePage from './pages/UserProfilePage'
 import { useAuth } from './contexts/AuthContext'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -27,6 +28,7 @@ function App() {
         <Route path="upload" element={<UploadPage />} />
         <Route path="teams" element={<TeamPage />} />
         <Route path="activity-logs" element={<ActivityLogPage />} />
+        <Route path="profile" element={<UserProfilePage />} />
       </Route>
     </Routes>
   )
