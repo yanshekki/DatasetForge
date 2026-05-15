@@ -4,6 +4,7 @@ import RegisterPage from './pages/RegisterPage'
 import Layout from './components/Layout'
 import DashboardPage from './pages/DashboardPage'
 import DatasetListPage from './pages/DatasetListPage'
+import DatasetDetailPage from './pages/DatasetDetailPage'
 import UploadPage from './pages/UploadPage'
 import TeamPage from './pages/TeamPage'
 import { useAuth } from './contexts/AuthContext'
@@ -21,6 +22,7 @@ function App() {
       <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
         <Route path="dashboard" element={<DashboardPage />} />
         <Route path="datasets" element={<DatasetListPage />} />
+        <Route path="datasets/:id" element={<DatasetDetailPage />} />
         <Route path="upload" element={<UploadPage />} />
         <Route path="teams" element={<TeamPage />} />
       </Route>
