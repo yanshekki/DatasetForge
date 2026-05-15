@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Typography, Container, Button, TextField, Box, LinearProgress } from '@mui/material'
 import api from '../api/axios'
+import { useSnackbar } from 'notistack'
 
 export default function UploadPage() {
   const [datasetId, setDatasetId] = useState('')
@@ -8,26 +9,25 @@ export default function UploadPage() {
   const [file, setFile] = useState<File | null>(null)
   const [uploading, setUploading] = useState(false)
   const [progress, setProgress] = useState(0)
+  const { enqueueSnackbar } = useSnackbar()
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) setFile(e.target.files[0])
   }
 
   const uploadFile = async () => {
-    if (!file || !datasetId) return alert('Please select file and enter Dataset ID')
+    if (!file || !datasetId) return enqueueSnackbar('Please select file and Dataset ID', { variant: 'warning' })
 
     setUploading(true)
     try {
-      // 1. Get presigned URL
       const presignedRes = await api.post('/upload/presigned-url', {
         datasetId: parseInt(datasetId),
         version,
         fileName: file.name,
       })
 
-      const { url, objectName } = presignedRes.data.data
+      const { url } = presignedRes.data.data
 
-      // 2. Upload file directly to MinIO using PUT
       await api.put(url, file, {
         headers: { 'Content-Type': file.type || 'application/octet-stream' },
         onUploadProgress: (progressEvent) => {
@@ -38,20 +38,18 @@ export default function UploadPage() {
         }
       })
 
-      // 3. Notify backend
       await api.post('/upload/complete', {
         datasetId: parseInt(datasetId),
         version,
-        objectName,
+        objectName: `datasets/${datasetId}/versions/${version}/${file.name}`,
         size: file.size,
       })
 
-      alert('Upload successful!')
+      enqueueSnackbar('Upload successful!', { variant: 'success' })
       setProgress(0)
       setFile(null)
     } catch (err) {
-      console.error(err)
-      alert('Upload failed')
+      enqueueSnackbar('Upload failed', { variant: 'error' })
     } finally {
       setUploading(false)
     }
@@ -60,7 +58,6 @@ export default function UploadPage() {
   return (
     <Container maxWidth="sm">
       <Typography variant="h4" gutterBottom>Upload File</Typography>
-
       <Box display="flex" flexDirection="column" gap={2}>
         <TextField label="Dataset ID" value={datasetId} onChange={e => setDatasetId(e.target.value)} />
         <TextField label="Version" value={version} onChange={e => setVersion(e.target.value)} />
@@ -69,11 +66,9 @@ export default function UploadPage() {
           <input type="file" hidden onChange={handleFileChange} />
         </Button>
         {file && <Typography>Selected: {file.name}</Typography>}
-
         <Button variant="contained" onClick={uploadFile} disabled={uploading || !file}>
           {uploading ? 'Uploading...' : 'Upload'}
         </Button>
-
         {uploading && <LinearProgress variant="determinate" value={progress} />}
       </Box>
     </Container>
