@@ -1,5 +1,5 @@
 import { AppBar, Toolbar, Typography, Drawer, List, ListItemButton, ListItemIcon, ListItemText, Box, Button, Avatar, Menu, MenuItem, IconButton, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material'
-import { Dashboard, Dataset, Upload, Groups, History } from '@mui/icons-material'
+import { Dashboard, Dataset, Upload, Groups, History, Person } from '@mui/icons-material'
 import { useNavigate, Outlet } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { useState } from 'react'
@@ -37,6 +37,7 @@ export default function Layout() {
     { text: 'Upload', icon: <Upload />, path: '/upload' },
     { text: 'Teams', icon: <Groups />, path: '/teams' },
     { text: 'Activity Log', icon: <History />, path: '/activity-logs' },
+    { text: 'Profile', icon: <Person />, path: '/profile' },
   ]
 
   return (
