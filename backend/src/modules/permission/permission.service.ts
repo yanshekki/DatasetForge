@@ -10,28 +10,33 @@ export class PermissionService {
     if (!dataset) return false;
     if (dataset.ownerId === userId) return true;
 
-    // Check direct permission
-    const permission = await prisma.datasetPermission.findFirst({
+    // Check direct user permission
+    const directPermission = await prisma.datasetPermission.findFirst({
       where: { datasetId, userId },
     });
-    if (permission) {
-      // Simple level check (expand later)
-      return true;
-    }
+    if (directPermission) return true;
 
-    // Check via team (simplified)
-    // In real impl, check if user is in a team that has permission
-    return false;
+    // Check via team membership (simplified)
+    const teamPermission = await prisma.datasetPermission.findFirst({
+      where: {
+        datasetId,
+        team: {
+          members: { some: { userId } }
+        }
+      },
+    });
+    return !!teamPermission;
   }
 
-  async shareDataset(datasetId: number, userId: number, level: PermissionLevel, grantedBy: number) {
+  async shareDatasetWithUser(datasetId: number, targetUserId: number, level: PermissionLevel, grantedBy: number) {
     return prisma.datasetPermission.create({
-      data: {
-        datasetId,
-        userId,
-        level,
-        grantedBy,
-      },
+      data: { datasetId, userId: targetUserId, level, grantedBy },
+    });
+  }
+
+  async shareDatasetWithTeam(datasetId: number, teamId: number, level: PermissionLevel, grantedBy: number) {
+    return prisma.datasetPermission.create({
+      data: { datasetId, teamId, level, grantedBy },
     });
   }
 }
