@@ -9,6 +9,7 @@ import datasetVersionRoutes from './modules/dataset-version/dataset-version.rout
 import uploadRoutes from './modules/upload/upload.route';
 import activityLogRoutes from './modules/activity-log/activity-log.route';
 import teamRoutes from './modules/team/team.route';
+import { authenticateToken } from './middlewares/auth.middleware';
 
 dotenv.config();
 
@@ -23,13 +24,15 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Routes
+// Public routes
 app.use('/api/auth', authRoutes);
-app.use('/api/datasets', datasetRoutes);
-app.use('/api/datasets/:datasetId/versions', datasetVersionRoutes);
-app.use('/api/upload', uploadRoutes);
-app.use('/api/activity-logs', activityLogRoutes);
-app.use('/api/teams', teamRoutes);
+
+// Protected routes
+app.use('/api/datasets', authenticateToken, datasetRoutes);
+app.use('/api/datasets/:datasetId/versions', authenticateToken, datasetVersionRoutes);
+app.use('/api/upload', authenticateToken, uploadRoutes);
+app.use('/api/activity-logs', authenticateToken, activityLogRoutes);
+app.use('/api/teams', authenticateToken, teamRoutes);
 
 // Health check
 app.get('/health', (req, res) => {
