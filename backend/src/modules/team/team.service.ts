@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { CreateTeamDto } from './team.dto';
+import { AddMemberDto } from './team-member.dto';
 
 const prisma = new PrismaClient();
 
@@ -22,6 +23,29 @@ export class TeamService {
           { members: { some: { userId } } },
         ],
       },
+    });
+  }
+
+  async addMember(teamId: number, data: AddMemberDto, requesterId: number) {
+    // Simple check: only owner can add for now
+    const team = await prisma.team.findUnique({ where: { id: teamId } });
+    if (!team || team.ownerId !== requesterId) throw new Error('Not authorized');
+
+    return prisma.teamMember.create({
+      data: {
+        teamId,
+        userId: data.userId,
+        role: data.role,
+      },
+    });
+  }
+
+  async removeMember(teamId: number, userId: number, requesterId: number) {
+    const team = await prisma.team.findUnique({ where: { id: teamId } });
+    if (!team || team.ownerId !== requesterId) throw new Error('Not authorized');
+
+    return prisma.teamMember.deleteMany({
+      where: { teamId, userId },
     });
   }
 }
