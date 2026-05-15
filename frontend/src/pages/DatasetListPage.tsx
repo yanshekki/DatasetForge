@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Typography, Container, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Dialog, DialogTitle, DialogContent, TextField, DialogActions, CircularProgress, Box, IconButton, Tooltip } from '@mui/material'
-import { Add, Delete, Visibility } from '@mui/icons-material'
+import { Add, Delete, Visibility, Edit } from '@mui/icons-material'
 import { useNavigate } from 'react-router-dom'
 import api from '../api/axios'
 import { useSnackbar } from 'notistack'
@@ -8,9 +8,11 @@ import { useSnackbar } from 'notistack'
 export default function DatasetListPage() {
   const [datasets, setDatasets] = useState<any[]>([])
   const [open, setOpen] = useState(false)
+  const [editOpen, setEditOpen] = useState(false)
   const [loading, setLoading] = useState(true)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [datasetToDelete, setDatasetToDelete] = useState<any>(null)
+  const [datasetToEdit, setDatasetToEdit] = useState<any>(null)
   const [newDataset, setNewDataset] = useState({ name: '', description: '' })
   const navigate = useNavigate()
   const { enqueueSnackbar } = useSnackbar()
@@ -38,9 +40,29 @@ export default function DatasetListPage() {
       setOpen(false)
       setNewDataset({ name: '', description: '' })
       fetchDatasets()
-      // Optional: redirect to the new dataset detail (if backend returns id)
     } catch (err) {
       enqueueSnackbar('Failed to create dataset', { variant: 'error' })
+    }
+  }
+
+  const openEditDialog = (dataset: any, e: React.MouseEvent) => {
+    e.stopPropagation()
+    setDatasetToEdit(dataset)
+    setNewDataset({ name: dataset.name, description: dataset.description || '' })
+    setEditOpen(true)
+  }
+
+  const updateDataset = async () => {
+    if (!datasetToEdit || !newDataset.name) return
+    try {
+      await api.put(`/datasets/${datasetToEdit.id}`, newDataset)
+      enqueueSnackbar('Dataset updated successfully!', { variant: 'success' })
+      setEditOpen(false)
+      setDatasetToEdit(null)
+      setNewDataset({ name: '', description: '' })
+      fetchDatasets()
+    } catch (err) {
+      enqueueSnackbar('Failed to update dataset', { variant: 'error' })
     }
   }
 
@@ -113,6 +135,11 @@ export default function DatasetListPage() {
                         <Visibility />
                       </IconButton>
                     </Tooltip>
+                    <Tooltip title="Edit Dataset">
+                      <IconButton onClick={(e) => openEditDialog(ds, e)}>
+                        <Edit />
+                      </IconButton>
+                    </Tooltip>
                     <Tooltip title="Delete Dataset">
                       <IconButton color="error" onClick={(e) => handleDeleteClick(ds, e)}>
                         <Delete />
@@ -126,6 +153,7 @@ export default function DatasetListPage() {
         </TableContainer>
       )}
 
+      {/* Create Dataset Dialog */}
       <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="sm">
         <DialogTitle>Create New Dataset</DialogTitle>
         <DialogContent>
@@ -138,6 +166,20 @@ export default function DatasetListPage() {
         </DialogActions>
       </Dialog>
 
+      {/* Edit Dataset Dialog */}
+      <Dialog open={editOpen} onClose={() => setEditOpen(false)} fullWidth maxWidth="sm">
+        <DialogTitle>Edit Dataset</DialogTitle>
+        <DialogContent>
+          <TextField fullWidth label="Dataset Name" margin="normal" value={newDataset.name} onChange={e => setNewDataset({...newDataset, name: e.target.value})} required />
+          <TextField fullWidth label="Description (optional)" margin="normal" multiline rows={3} value={newDataset.description} onChange={e => setNewDataset({...newDataset, description: e.target.value})} />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setEditOpen(false)}>Cancel</Button>
+          <Button variant="contained" onClick={updateDataset}>Save Changes</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
       <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
         <DialogTitle>Delete Dataset?</DialogTitle>
         <DialogContent>
