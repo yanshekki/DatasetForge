@@ -1,7 +1,7 @@
 {
   "name": "datasetforge-backend",
   "version": "1.0.0",
-  "description": "DatasetForge - Backend for AI Dataset Management Platform",
+  "description": "DatasetForge Backend - Professional AI Dataset Management Platform",
   "main": "dist/server.js",
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
