@@ -1,42 +1,47 @@
-import * as Minio from 'minio';
+import { Client } from 'minio';
+import dotenv from 'dotenv';
 
-const minioClient = new Minio.Client({
+dotenv.config();
+
+const minioClient = new Client({
   endPoint: process.env.MINIO_ENDPOINT || 'localhost',
   port: parseInt(process.env.MINIO_PORT || '9000'),
   useSSL: process.env.MINIO_USE_SSL === 'true',
-  accessKey: process.env.MINIO_ACCESS_KEY || 'minioadmin',
-  secretKey: process.env.MINIO_SECRET_KEY || 'minioadmin',
+  accessKey: process.env.MINIO_ACCESS_KEY || '',
+  secretKey: process.env.MINIO_SECRET_KEY || '',
 });
 
-const BUCKET = process.env.MINIO_BUCKET || 'datasetforge';
-
-async function ensureBucket() {
-  const exists = await minioClient.bucketExists(BUCKET);
-  if (!exists) {
-    await minioClient.makeBucket(BUCKET);
-  }
-}
+const BUCKET_NAME = process.env.MINIO_BUCKET || 'datasetforge';
 
 export class UploadService {
   async getPresignedUrl(datasetId: number, version: string, fileName: string, operation: 'upload' | 'download' = 'upload') {
-    await ensureBucket();
     const objectName = `datasets/${datasetId}/versions/${version}/${fileName}`;
-    try {
-      if (operation === 'upload') {
-        const url = await minioClient.presignedPutObject(BUCKET, objectName, 60 * 60);
-        return { url, objectName, method: 'PUT' };
-      } else {
-        const url = await minioClient.presignedGetObject(BUCKET, objectName, 60 * 60);
-        return { url, objectName, method: 'GET' };
-      }
-    } catch (err) {
-      console.error('MinIO error:', err);
-      throw new Error('Failed to generate presigned URL');
+
+    if (operation === 'download') {
+      return minioClient.presignedGetObject(BUCKET_NAME, objectName, 60 * 60); // 1 hour
+    } else {
+      return minioClient.presignedPutObject(BUCKET_NAME, objectName, 60 * 60); // 1 hour
     }
   }
 
-  async notifyUploadComplete(datasetId: number, version: string, objectName: string, size: number) {
-    console.log(`[Upload] Complete: ${objectName} (${size} bytes)`);
-    return { success: true };
+  async deleteFile(datasetId: number, version: string, fileName: string) {
+    const objectName = `datasets/${datasetId}/versions/${version}/${fileName}`;
+    await minioClient.removeObject(BUCKET_NAME, objectName);
+    return { success: true, message: 'File deleted from storage' };
+  }
+
+  async listFiles(datasetId: number, version?: string) {
+    const prefix = version 
+      ? `datasets/${datasetId}/versions/${version}/` 
+      : `datasets/${datasetId}/`;
+
+    const stream = minioClient.listObjectsV2(BUCKET_NAME, prefix, true);
+    const files: any[] = [];
+
+    return new Promise((resolve, reject) => {
+      stream.on('data', (obj) => files.push(obj));
+      stream.on('error', reject);
+      stream.on('end', () => resolve(files));
+    });
   }
 }
