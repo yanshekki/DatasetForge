@@ -1,5 +1,5 @@
-import { AppBar, Toolbar, Typography, Drawer, List, ListItemButton, ListItemIcon, ListItemText, Box, Button, Avatar, Menu, MenuItem, IconButton } from '@mui/material'
-import { Dashboard, Dataset, Upload, Groups, AccountCircle } from '@mui/icons-material'
+import { AppBar, Toolbar, Typography, Drawer, List, ListItemButton, ListItemIcon, ListItemText, Box, Button, Avatar, Menu, MenuItem, IconButton, useMediaQuery, useTheme } from '@mui/material'
+import { Dashboard, Dataset, Upload, Groups } from '@mui/icons-material'
 import { useNavigate, Outlet } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { useState } from 'react'
@@ -10,6 +10,8 @@ export default function Layout() {
   const navigate = useNavigate()
   const { logout, user } = useAuth()
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
+  const theme = useTheme()
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
 
   const handleMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget)
@@ -41,20 +43,12 @@ export default function Layout() {
           </Typography>
 
           <div>
-            <IconButton
-              size="large"
-              onClick={handleMenu}
-              color="inherit"
-            >
+            <IconButton size="large" onClick={handleMenu} color="inherit">
               <Avatar sx={{ width: 32, height: 32, bgcolor: 'secondary.main' }}>
                 {user?.email?.[0]?.toUpperCase() || 'U'}
               </Avatar>
             </IconButton>
-            <Menu
-              anchorEl={anchorEl}
-              open={Boolean(anchorEl)}
-              onClose={handleClose}
-            >
+            <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleClose}>
               <MenuItem disabled>{user?.email}</MenuItem>
               <MenuItem onClick={handleLogout}>Logout</MenuItem>
             </MenuItem>
@@ -63,12 +57,14 @@ export default function Layout() {
       </AppBar>
 
       <Drawer
-        variant="permanent"
+        variant={isMobile ? "temporary" : "permanent"}
         sx={{
           width: drawerWidth,
           flexShrink: 0,
           [`& .MuiDrawer-paper`]: { width: drawerWidth, boxSizing: 'border-box' },
         }}
+        open={!isMobile}
+        onClose={() => {}}
       >
         <Toolbar />
         <List>
@@ -81,7 +77,7 @@ export default function Layout() {
         </List>
       </Drawer>
 
-      <Box component="main" sx={{ flexGrow: 1, p: 3, mt: 8 }}>
+      <Box component="main" sx={{ flexGrow: 1, p: 3, mt: 8, ml: isMobile ? 0 : `${drawerWidth}px` }}>
         <Outlet />
       </Box>
     </Box>
