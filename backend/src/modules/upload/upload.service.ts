@@ -1,6 +1,5 @@
 import * as Minio from 'minio';
 
-// Config from env
 const minioClient = new Minio.Client({
   endPoint: process.env.MINIO_ENDPOINT || 'localhost',
   port: parseInt(process.env.MINIO_PORT || '9000'),
@@ -14,27 +13,30 @@ const BUCKET = process.env.MINIO_BUCKET || 'datasetforge';
 async function ensureBucket() {
   const exists = await minioClient.bucketExists(BUCKET);
   if (!exists) {
-    await minioClient.makeBucket(BUCKET, 'us-east-1');
-    console.log(`Bucket ${BUCKET} created`);
+    await minioClient.makeBucket(BUCKET);
   }
 }
 
 export class UploadService {
-  async getPresignedUrl(datasetId: number, version: string, fileName: string) {
+  async getPresignedUrl(datasetId: number, version: string, fileName: string, operation: 'upload' | 'download' = 'upload') {
     await ensureBucket();
     const objectName = `datasets/${datasetId}/versions/${version}/${fileName}`;
     try {
-      const url = await minioClient.presignedPutObject(BUCKET, objectName, 60 * 60);
-      return { url, objectName, method: 'PUT' };
+      if (operation === 'upload') {
+        const url = await minioClient.presignedPutObject(BUCKET, objectName, 60 * 60);
+        return { url, objectName, method: 'PUT' };
+      } else {
+        const url = await minioClient.presignedGetObject(BUCKET, objectName, 60 * 60);
+        return { url, objectName, method: 'GET' };
+      }
     } catch (err) {
-      console.error('MinIO presigned URL error:', err);
-      throw new Error('Failed to generate upload URL');
+      console.error('MinIO error:', err);
+      throw new Error('Failed to generate presigned URL');
     }
   }
 
   async notifyUploadComplete(datasetId: number, version: string, objectName: string, size: number) {
-    console.log(`Upload complete: ${objectName}, size: ${size} bytes`);
-    // TODO: Update DatasetVersion with filePath + size
-    return { success: true, objectName, size };
+    console.log(`[Upload] Complete: ${objectName} (${size} bytes)`);
+    return { success: true };
   }
 }
