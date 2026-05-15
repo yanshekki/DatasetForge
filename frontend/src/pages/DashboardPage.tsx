@@ -1,20 +1,16 @@
-import { Typography, Container, Button } from '@mui/material'
+import { Typography, Container } from '@mui/material'
 import { useAuth } from '../contexts/AuthContext'
-import { useNavigate } from 'react-router-dom'
 
-function DashboardPage() {
-  const { logout, user } = useAuth()
-  const navigate = useNavigate()
+export default function DashboardPage() {
+  const { user } = useAuth()
 
   return (
     <Container>
-      <Typography variant="h4" gutterBottom>Welcome to DatasetForge</Typography>
-      <Typography>Welcome, {user?.email}</Typography>
-      <Button variant="outlined" onClick={() => { logout(); navigate('/login') }} sx={{ mt: 2 }}>
-        Logout
-      </Button>
+      <Typography variant="h4" gutterBottom>Dashboard</Typography>
+      <Typography>Welcome back, {user?.email}!</Typography>
+      <Typography variant="body1" sx={{ mt: 2 }}>
+        Use the sidebar to navigate between Datasets, Upload, and Teams.
+      </Typography>
     </Container>
   )
 }
-
-export default DashboardPage
