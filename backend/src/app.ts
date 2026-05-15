@@ -5,6 +5,8 @@ import pino from 'pino';
 import dotenv from 'dotenv';
 import authRoutes from './modules/auth/auth.route';
 import datasetRoutes from './modules/dataset/dataset.route';
+import datasetVersionRoutes from './modules/dataset-version/dataset-version.route';
+import uploadRoutes from './modules/upload/upload.route';
 
 dotenv.config();
 
@@ -22,6 +24,8 @@ app.use(express.urlencoded({ extended: true }));
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/datasets', datasetRoutes);
+app.use('/api/datasets/:datasetId/versions', datasetVersionRoutes);
+app.use('/api/upload', uploadRoutes);
 
 // Health check
 app.get('/health', (req, res) => {
