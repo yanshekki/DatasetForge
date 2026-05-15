@@ -13,6 +13,7 @@ import { authenticateToken } from './middlewares/auth.middleware';
 import { errorHandler } from './middlewares/error.middleware';
 import { apiLimiter } from './middlewares/rate-limit.middleware';
 import { requestIdMiddleware } from './middlewares/request-id.middleware';
+import { requireDatasetAccess } from './middlewares/permission.middleware';
 
 dotenv.config();
 
@@ -29,16 +30,24 @@ app.use(express.urlencoded({ extended: true }));
 app.use(requestIdMiddleware);
 app.use('/api/', apiLimiter);
 
-// Routes
+// Public routes
 app.use('/api/auth', authRoutes);
+
+// Protected routes
 app.use('/api/datasets', authenticateToken, datasetRoutes);
-app.use('/api/datasets/:datasetId/versions', authenticateToken, datasetVersionRoutes);
+app.use('/api/datasets/:datasetId', authenticateToken, requireDatasetAccess, datasetRoutes);
+app.use('/api/datasets/:datasetId/versions', authenticateToken, requireDatasetAccess, datasetVersionRoutes);
 app.use('/api/upload', authenticateToken, uploadRoutes);
 app.use('/api/activity-logs', authenticateToken, activityLogRoutes);
 app.use('/api/teams', authenticateToken, teamRoutes);
 
+// Health check
 app.get('/health', (req, res) => {
-  res.json({ status: 'ok', message: 'DatasetForge Backend is running', timestamp: new Date().toISOString() });
+  res.json({
+    status: 'ok',
+    message: 'DatasetForge Backend is running',
+    timestamp: new Date().toISOString(),
+  });
 });
 
 app.use((req, res, next) => {
@@ -46,6 +55,7 @@ app.use((req, res, next) => {
   next();
 });
 
+// Global error handler
 app.use(errorHandler);
 
 export default app;
