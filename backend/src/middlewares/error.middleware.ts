@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 
-export function errorHandler(err: any, req: Request, res: Response, next: NextFunction) {
+export const errorHandler = (err: any, req: Request, res: Response, next: NextFunction) => {
   console.error(err);
 
   const statusCode = err.statusCode || 500;
@@ -11,4 +11,4 @@ export function errorHandler(err: any, req: Request, res: Response, next: NextFu
     message,
     ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
   });
-}
+};
