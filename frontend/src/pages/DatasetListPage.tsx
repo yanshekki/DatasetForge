@@ -38,6 +38,7 @@ export default function DatasetListPage() {
       setOpen(false)
       setNewDataset({ name: '', description: '' })
       fetchDatasets()
+      // Optional: redirect to the new dataset detail (if backend returns id)
     } catch (err) {
       enqueueSnackbar('Failed to create dataset', { variant: 'error' })
     }
@@ -81,9 +82,7 @@ export default function DatasetListPage() {
         </Box>
       ) : datasets.length === 0 ? (
         <Box textAlign="center" mt={8}>
-          <Typography variant="h6" color="text.secondary" gutterBottom>
-            No datasets yet
-          </Typography>
+          <Typography variant="h6" color="text.secondary" gutterBottom>No datasets yet</Typography>
           <Typography color="text.secondary" sx={{ mb: 3 }}>
             Create your first dataset to start organizing your AI training data.
           </Typography>
@@ -106,7 +105,7 @@ export default function DatasetListPage() {
               {datasets.map((ds) => (
                 <TableRow key={ds.id} hover onClick={() => navigate(`/datasets/${ds.id}`)} style={{ cursor: 'pointer' }}>
                   <TableCell>{ds.name}</TableCell>
-                  <TableCell>{ds.description || <em style={{color: '#999'}}>No description</em>}</TableCell>
+                  <TableCell>{ds.description || <em style={{ color: '#999' }}>No description</em>}</TableCell>
                   <TableCell>{new Date(ds.createdAt).toLocaleDateString()}</TableCell>
                   <TableCell align="right">
                     <Tooltip title="View Details">
@@ -127,7 +126,6 @@ export default function DatasetListPage() {
         </TableContainer>
       )}
 
-      {/* Create Dataset Dialog */}
       <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="sm">
         <DialogTitle>Create New Dataset</DialogTitle>
         <DialogContent>
@@ -140,13 +138,10 @@ export default function DatasetListPage() {
         </DialogActions>
       </Dialog>
 
-      {/* Delete Confirmation Dialog */}
       <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
         <DialogTitle>Delete Dataset?</DialogTitle>
         <DialogContent>
-          <Typography>
-            Are you sure you want to delete <strong>{datasetToDelete?.name}</strong>? This action cannot be undone.
-          </Typography>
+          <Typography>Are you sure you want to delete <strong>{datasetToDelete?.name}</strong>? This action cannot be undone.</Typography>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>

@@ -1,4 +1,4 @@
-import { AppBar, Toolbar, Typography, Drawer, List, ListItemButton, ListItemIcon, ListItemText, Box, Button, Avatar, Menu, MenuItem, IconButton, useMediaQuery, useTheme } from '@mui/material'
+import { AppBar, Toolbar, Typography, Drawer, List, ListItemButton, ListItemIcon, ListItemText, Box, Button, Avatar, Menu, MenuItem, IconButton, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material'
 import { Dashboard, Dataset, Upload, Groups } from '@mui/icons-material'
 import { useNavigate, Outlet } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
@@ -10,8 +10,7 @@ export default function Layout() {
   const navigate = useNavigate()
   const { logout, user } = useAuth()
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
-  const theme = useTheme()
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
+  const [logoutDialogOpen, setLogoutDialogOpen] = useState(false)
 
   const handleMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget)
@@ -21,8 +20,13 @@ export default function Layout() {
     setAnchorEl(null)
   }
 
-  const handleLogout = () => {
+  const handleLogoutClick = () => {
     handleClose()
+    setLogoutDialogOpen(true)
+  }
+
+  const confirmLogout = () => {
+    setLogoutDialogOpen(false)
     logout()
     navigate('/login')
   }
@@ -50,21 +54,19 @@ export default function Layout() {
             </IconButton>
             <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleClose}>
               <MenuItem disabled>{user?.email}</MenuItem>
-              <MenuItem onClick={handleLogout}>Logout</MenuItem>
+              <MenuItem onClick={handleLogoutClick}>Logout</MenuItem>
             </MenuItem>
           </Menu>
         </Toolbar>
       </AppBar>
 
       <Drawer
-        variant={isMobile ? "temporary" : "permanent"}
+        variant="permanent"
         sx={{
           width: drawerWidth,
           flexShrink: 0,
           [`& .MuiDrawer-paper`]: { width: drawerWidth, boxSizing: 'border-box' },
         }}
-        open={!isMobile}
-        onClose={() => {}}
       >
         <Toolbar />
         <List>
@@ -77,9 +79,20 @@ export default function Layout() {
         </List>
       </Drawer>
 
-      <Box component="main" sx={{ flexGrow: 1, p: 3, mt: 8, ml: isMobile ? 0 : `${drawerWidth}px` }}>
+      <Box component="main" sx={{ flexGrow: 1, p: 3, mt: 8, ml: `${drawerWidth}px` }}>
         <Outlet />
       </Box>
+
+      <Dialog open={logoutDialogOpen} onClose={() => setLogoutDialogOpen(false)}>
+        <DialogTitle>Confirm Logout</DialogTitle>
+        <DialogContent>
+          <Typography>Are you sure you want to logout?</Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setLogoutDialogOpen(false)}>Cancel</Button>
+          <Button color="error" variant="contained" onClick={confirmLogout}>Logout</Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   )
 }
