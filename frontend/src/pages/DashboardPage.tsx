@@ -13,9 +13,9 @@ export default function DashboardPage() {
 
   return (
     <Container>
-      <Typography variant="h4" gutterBottom>Welcome back, {user?.name || user?.email?.split('@')[0]}!</Typography>
+      <Typography variant="h4" gutterBottom>Welcome back!</Typography>
       <Typography color="text.secondary" sx={{ mb: 4 }}>
-        Here's what's happening with your datasets today.
+        Here's a quick overview of your activity.
       </Typography>
 
       <Grid container spacing={3}>
@@ -32,10 +32,10 @@ export default function DashboardPage() {
         ))}
       </Grid>
 
-      <Box mt={4}>
-        <Typography variant="h6" gutterBottom>Quick Actions</Typography>
+      <Box mt={5}>
+        <Typography variant="h6" gutterBottom>Quick Tips</Typography>
         <Typography color="text.secondary">
-          Use the sidebar to manage your datasets, upload new files, or manage your teams.
+          Use the sidebar to manage datasets, upload new files, or check your activity logs.
         </Typography>
       </Box>
     </Container>
