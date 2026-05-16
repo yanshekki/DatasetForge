@@ -1,91 +1,91 @@
 # DatasetForge
 
-**Professional AI Dataset Management Platform**
+**專業 AI 訓練資料集管理平台**
 
-DatasetForge is a modern, full-featured platform designed for managing AI training datasets. It provides robust version control, team collaboration, permission management, activity tracking, and multi-format export capabilities.
-
----
-
-## 🚀 Key Features
-
-### Core Dataset Management
-- **Version Control**: Full versioning system with detailed metadata
-- **Upload System**: Secure file uploads via MinIO presigned URLs
-- **Tags & Search**: Powerful tagging system with full-text search
-- **Download Statistics**: Track downloads at both dataset and version level
-
-### Collaboration & Sharing
-- **Team Management**: Create teams, invite members, manage roles
-- **Permission System**: Granular permissions (READ / WRITE / ADMIN)
-- **Public Share Links**: Generate time-limited, permission-controlled shareable links
-- **Comments & Mentions**: Dataset-level comments with @mention notifications
-
-### Analytics & Insights
-- **Activity Log**: Comprehensive audit trail of all actions
-- **Activity Heatmap**: Visual 30-day activity visualization
-- **Version Comparison**: Side-by-side diff between any two versions
-
-### Export & Integration
-- **Multi-format Export**: Export as ZIP, CSV, or JSON
-- **API-First Design**: Full OpenAPI/Swagger documentation
-- **Webhook Ready** (extensible)
+DatasetForge 係一個現代化、全功能嘅 AI 訓練資料集管理平台，提供強大嘅版本控制、團隊協作、權限管理、活動追蹤同多格式匯出功能。
 
 ---
 
-## 🏗️ Tech Stack
+## 🚀 主要功能
 
-### Backend
-- **Runtime**: Node.js + TypeScript
-- **Framework**: Express.js
-- **Database**: PostgreSQL + Prisma ORM
-- **Authentication**: JWT (Access + Refresh Tokens) + bcrypt
-- **File Storage**: MinIO (S3-compatible)
-- **Email**: Nodemailer
-- **Documentation**: Swagger / OpenAPI
+### 核心資料集管理
+- **版本控制**：完整版本系統 + 詳細元數據
+- **上傳系統**：透過 MinIO Presigned URL 安全上傳檔案
+- **標籤與搜尋**：強大標籤系統 + 全文搜尋
+- **下載統計**：同時追蹤 Dataset 同每個 Version 嘅下載次數
 
-### Frontend
-- **Framework**: React 18 + TypeScript + Vite
-- **UI Library**: Material-UI (MUI) v5
-- **State Management**: TanStack Query (React Query)
-- **Routing**: React Router v6
-- **Theming**: Dark / Light mode with persistence
+### 協作與分享
+- **團隊管理**：建立團隊、邀請成員、管理角色
+- **權限系統**：細粒度權限（READ / WRITE / ADMIN）
+- **公開分享連結**：生成有時效性、可控制權限嘅分享連結
+- **評論與提及**：Dataset 級別評論 + @提及自動通知
+
+### 分析與洞察
+- **活動日誌**：完整審計軌跡
+- **活動熱力圖**：30 日活動視覺化
+- **版本比較**：任意兩個版本之間嘅差異對比
+
+### 匯出與整合
+- **多格式匯出**：支援 ZIP、CSV、JSON
+- **API-First 設計**：完整 OpenAPI / Swagger 文件
+- **Webhook 就緒**（可擴展）
+
+---
+
+## 🏗️ 技術棧
+
+### 後端
+- **執行環境**：Node.js + TypeScript
+- **框架**：Express.js
+- **資料庫**：PostgreSQL + Prisma ORM
+- **認證**：JWT（Access + Refresh Token）+ bcrypt
+- **檔案儲存**：MinIO（相容 S3）
+- **郵件**：Nodemailer
+- **文件**：Swagger / OpenAPI
+
+### 前端
+- **框架**：React 18 + TypeScript + Vite
+- **UI 庫**：Material-UI (MUI) v5
+- **狀態管理**：TanStack Query（React Query）
+- **路由**：React Router v6
+- **主題**：深色 / 淺色模式 + 持久化儲存
 
 ### DevOps
-- **Containerization**: Docker + docker-compose
-- **CI/CD**: GitHub Actions
-- **Testing**: Jest + Supertest
+- **容器化**：Docker + docker-compose
+- **CI/CD**：GitHub Actions
+- **測試**：Jest + Supertest
 
 ---
 
-## 📁 Project Structure
+## 📁 專案結構
 
 ```
 DatasetForge/
-├── backend/                 # Node.js + Prisma backend
+├── backend/                 # Node.js + Prisma 後端
 │   ├── src/
-│   │   ├── modules/        # Feature modules (auth, dataset, team, etc.)
-│   │   ├── middlewares/    # Auth, permission, error, rate-limit
+│   │   ├── modules/        # 功能模組（auth、dataset、team 等）
+│   │   ├── middlewares/    # 認證、權限、錯誤、限流
 │   │   └── app.ts
 │   └── prisma/schema.prisma
-├── frontend/                # React + Vite frontend
+├── frontend/                # React + Vite 前端
 │   └── src/
-│       ├── pages/          # All main pages
-│       ├── components/     # Reusable UI components
-│       └── contexts/       # AuthContext, etc.
+│       ├── pages/          # 所有主要頁面
+│       ├── components/     # 可重用 UI 元件
+│       └── contexts/       # AuthContext 等
 ├── docker-compose.yml
 └── README.md
 ```
 
 ---
 
-## 🚀 Quick Start
+## 🚀 快速開始
 
-### Prerequisites
+### 前置條件
 - Node.js 18+
 - Docker + Docker Compose
-- PostgreSQL (or use docker-compose)
+- PostgreSQL（或使用 docker-compose）
 
-### Backend Setup
+### 後端設定
 ```bash
 cd backend
 npm install
@@ -94,69 +94,69 @@ npx prisma migrate dev
 npm run dev
 ```
 
-### Frontend Setup
+### 前端設定
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
 
-### Full Stack with Docker
+### 使用 Docker 完整啟動
 ```bash
 docker-compose up --build
 ```
 
 ---
 
-## 📚 Documentation
+## 📚 文件
 
-- [Overview](doc/01_Overview_en.md)
-- [Features](doc/02_Features_en.md)
-- [System Architecture](doc/03_System_Architecture_en.md)
-- [Data Model](doc/04_Data_Model_en.md)
-- [API Design](doc/05_API_Design_en.md)
+- [概覽](doc/01_Overview_zh.md)
+- [功能規格](doc/02_Features_zh.md)
+- [系統架構](doc/03_System_Architecture_zh.md)
+- [資料模型](doc/04_Data_Model_zh.md)
+- [API 設計](doc/05_API_Design_zh.md)
 
-**中文版文件**：請參閱 `doc/` 目錄下的 `_zh.md` 檔案
-
----
-
-## 🔐 Security
-- JWT-based authentication with refresh tokens
-- Role-based access control (RBAC)
-- Rate limiting on all API endpoints
-- Secure file uploads via presigned URLs
-- Comprehensive input validation (Zod)
+**English Documentation**: Please refer to the `_en.md` files in the `doc/` directory.
 
 ---
 
-## 📈 Current Status
-
-**Production Ready** — DatasetForge is feature-complete and suitable for production use in small to medium teams.
-
-**Completed Highlights**:
-- Full authentication & authorization
-- Dataset versioning + upload
-- Team collaboration + permissions
-- Activity logging + heatmap
-- Public share links
-- Comments + mentions
-- Version comparison (Diff)
-- Multi-format export (ZIP / CSV / JSON)
-- Dark mode + responsive UI
-- Docker + CI/CD pipeline
+## 🔐 安全性
+- 基於 JWT 嘅認證（支援 Refresh Token）
+- 基於角色嘅存取控制（RBAC）
+- 所有 API 端點限流
+- 透過 Presigned URL 安全上傳檔案
+- 完整輸入驗證（Zod）
 
 ---
 
-## 🤝 Contributing
+## 📈 目前狀態
 
-We welcome contributions! Please open an issue or submit a pull request.
+**已準備好投入生產** — DatasetForge 功能完整，適合中小型團隊使用。
+
+**已完成亮點**：
+- 完整認證與授權系統
+- Dataset 版本控制 + 上傳
+- 團隊協作 + 權限管理
+- 活動記錄 + 熱力圖
+- 公開分享連結
+- 評論 + 提及功能
+- 版本比較（Diff）
+- 多格式匯出（ZIP / CSV / JSON）
+- 深色模式 + 響應式 UI
+- Docker + CI/CD 流程
 
 ---
 
-## 📄 License
+## 🤝 貢獻
 
-MIT License — feel free to use for personal or commercial projects.
+歡迎貢獻！請開 Issue 或提交 Pull Request。
 
 ---
 
-**Powered by [YSK Limited](https://ysk.hk/) — Hong Kong Remote Dev Team & Enterprise Solutions**
+## 📄 授權
+
+MIT License — 可自由用於個人或商業項目。
+
+---
+
+**Powered by [YSK Limited](https://ysk.hk/) — 香港遠端開發團隊及企業解決方案**
