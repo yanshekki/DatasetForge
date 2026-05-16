@@ -39,11 +39,11 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 // Public routes
 app.use('/api/auth', authRoutes);
 
-// Protected routes
+// Protected routes with comprehensive permission checks
 app.use('/api/datasets', authenticateToken, datasetRoutes);
 app.use('/api/datasets/:datasetId', authenticateToken, requireDatasetAccess);
 app.use('/api/datasets/:datasetId/versions', authenticateToken, requireDatasetAccess, datasetVersionRoutes);
-app.use('/api/upload', authenticateToken, uploadRoutes);
+app.use('/api/upload', authenticateToken, requireDatasetAccess, uploadRoutes);
 app.use('/api/activity-logs', authenticateToken, activityLogRoutes);
 app.use('/api/teams', authenticateToken, teamRoutes);
 
