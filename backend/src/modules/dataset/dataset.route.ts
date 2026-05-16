@@ -1,12 +1,13 @@
 import { Router } from 'express';
-import { DatasetController } from './dataset.controller';
+import { getAllDatasets, getDatasetById, createDataset, updateDataset, deleteDataset } from './dataset.controller';
+import { authenticateToken } from '../../middlewares/auth.middleware';
 
 const router = Router();
 
-router.post('/', DatasetController.create);
-router.get('/', DatasetController.findAll);
-router.get('/:id', DatasetController.findOne);
-router.patch('/:id', DatasetController.update);
-router.delete('/:id', DatasetController.remove);
+router.get('/', authenticateToken, getAllDatasets);
+router.get('/:id', authenticateToken, getDatasetById);
+router.post('/', authenticateToken, createDataset);
+router.put('/:id', authenticateToken, updateDataset);
+router.delete('/:id', authenticateToken, deleteDataset);
 
 export default router;
