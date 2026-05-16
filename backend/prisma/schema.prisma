@@ -1,14 +1,23 @@
-model Notification {
-  id        Int      @id @default(autoincrement())
-  userId    Int
-  type      String   // e.g. 'DATASET_SHARED', 'VERSION_UPLOADED', 'TEAM_INVITED'
-  title     String
-  message   String
-  isRead    Boolean  @default(false)
-  createdAt DateTime @default(now())
+model Tag {
+  id        Int       @id @default(autoincrement())
+  name      String    @unique
+  createdAt DateTime  @default(now())
 
-  user      User     @relation(fields: [userId], references: [id])
+  datasets  Dataset[] @relation("DatasetTags")
+}
+
+model Dataset {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String?
+  userId      Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user        User      @relation(fields: [userId], references: [id])
+  versions    DatasetVersion[]
+  permissions DatasetPermission[]
+  tags        Tag[]     @relation("DatasetTags")
 
   @@index([userId])
-  @@index([createdAt])
 }
