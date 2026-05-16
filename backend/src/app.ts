@@ -14,6 +14,7 @@ import activityLogRoutes from './modules/activity-log/activity-log.route';
 import teamRoutes from './modules/team/team.route';
 import notificationRoutes from './modules/notification/notification.route';
 import shareLinkRoutes from './modules/share-link/share-link.route';
+import commentRoutes from './modules/comment/comment.route';
 import { authenticateToken } from './middlewares/auth.middleware';
 import { errorHandler } from './middlewares/error.middleware';
 import { apiLimiter } from './middlewares/rate-limit.middleware';
@@ -50,6 +51,7 @@ app.use('/api/upload', authenticateToken, requireDatasetAccess, uploadRoutes);
 app.use('/api/activity-logs', authenticateToken, activityLogRoutes);
 app.use('/api/teams', authenticateToken, teamRoutes);
 app.use('/api/notifications', authenticateToken, notificationRoutes);
+app.use('/api/comments', authenticateToken, commentRoutes);
 
 // Health check
 app.get('/health', (req, res) => {
