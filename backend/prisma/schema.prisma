@@ -1,14 +1,148 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              Int      @id @default(autoincrement())
+  email           String   @unique
+  password        String
+  name            String?
+  profilePicture  String?
+  preferences     Json?
+  createdAt       DateTime @default(now())
+
+  datasets        Dataset[]
+  datasetVersions DatasetVersion[]
+  teams           Team[]
+  teamMembers     TeamMember[]
+  permissions     Permission[]
+  activityLogs    ActivityLog[]
+  shareLinks      ShareLink[]
+  comments        Comment[]
+  notifications   Notification[]
+}
+
+model Dataset {
+  id            Int      @id @default(autoincrement())
+  name          String
+  description   String?
+  userId        Int
+  downloadCount Int      @default(0)
+  createdAt     DateTime @default(now())
+
+  user        User             @relation(fields: [userId], references: [id])
+  versions    DatasetVersion[]
+  tags        Tag[]
+  permissions Permission[]
+  shareLinks  ShareLink[]
+  comments    Comment[]
+  activityLogs ActivityLog[]
+}
+
 model DatasetVersion {
+  id            Int      @id @default(autoincrement())
+  datasetId     Int
+  userId        Int
+  version       String
+  fileName      String
+  fileSize      Int?
+  description   String?
+  downloadCount Int      @default(0)
+  createdAt     DateTime @default(now())
+
+  dataset Dataset @relation(fields: [datasetId], references: [id])
+  user    User    @relation(fields: [userId], references: [id])
+}
+
+model Team {
+  id        Int      @id @default(autoincrement())
+  name      String
+  ownerId   Int
+  createdAt DateTime @default(now())
+
+  owner   User         @relation(fields: [ownerId], references: [id])
+  members TeamMember[]
+}
+
+model TeamMember {
+  id        Int      @id @default(autoincrement())
+  teamId    Int
+  userId    Int
+  role      String   @default("MEMBER")
+  joinedAt  DateTime @default(now())
+
+  team Team @relation(fields: [teamId], references: [id])
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([teamId, userId])
+}
+
+model Permission {
   id          Int      @id @default(autoincrement())
   datasetId   Int
   userId      Int
-  version     String
-  fileName    String
-  fileSize    Int?
-  description String?
-  downloadCount Int    @default(0)
+  level       String   // READ, WRITE, ADMIN
   createdAt   DateTime @default(now())
 
-  dataset     Dataset  @relation(fields: [datasetId], references: [id])
-  user        User     @relation(fields: [userId], references: [id])
+  dataset Dataset @relation(fields: [datasetId], references: [id])
+  user    User    @relation(fields: [userId], references: [id])
+
+  @@unique([datasetId, userId])
+}
+
+model ActivityLog {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  type      String
+  targetId  Int?
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model ShareLink {
+  id          Int      @id @default(autoincrement())
+  datasetId   Int
+  token       String   @unique
+  permission  String
+  expiresAt   DateTime?
+  createdAt   DateTime @default(now())
+
+  dataset Dataset @relation(fields: [datasetId], references: [id])
+}
+
+model Comment {
+  id        Int      @id @default(autoincrement())
+  datasetId Int
+  userId    Int
+  content   String
+  createdAt DateTime @default(now())
+
+  dataset Dataset @relation(fields: [datasetId], references: [id])
+  user    User    @relation(fields: [userId], references: [id])
+}
+
+model Notification {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  type      String
+  message   String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model Tag {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  createdAt DateTime @default(now())
+
+  datasets Dataset[]
 }
