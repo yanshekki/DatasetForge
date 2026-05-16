@@ -12,6 +12,7 @@ import datasetVersionRoutes from './modules/dataset-version/dataset-version.rout
 import uploadRoutes from './modules/upload/upload.route';
 import activityLogRoutes from './modules/activity-log/activity-log.route';
 import teamRoutes from './modules/team/team.route';
+import notificationRoutes from './modules/notification/notification.route';
 import { authenticateToken } from './middlewares/auth.middleware';
 import { errorHandler } from './middlewares/error.middleware';
 import { apiLimiter } from './middlewares/rate-limit.middleware';
@@ -39,13 +40,14 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 // Public routes
 app.use('/api/auth', authRoutes);
 
-// Protected routes with comprehensive permission checks
+// Protected routes
 app.use('/api/datasets', authenticateToken, datasetRoutes);
 app.use('/api/datasets/:datasetId', authenticateToken, requireDatasetAccess);
 app.use('/api/datasets/:datasetId/versions', authenticateToken, requireDatasetAccess, datasetVersionRoutes);
 app.use('/api/upload', authenticateToken, requireDatasetAccess, uploadRoutes);
 app.use('/api/activity-logs', authenticateToken, activityLogRoutes);
 app.use('/api/teams', authenticateToken, teamRoutes);
+app.use('/api/notifications', authenticateToken, notificationRoutes);
 
 // Health check
 app.get('/health', (req, res) => {
