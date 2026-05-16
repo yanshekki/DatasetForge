@@ -1,20 +1,46 @@
 import { prisma } from '../../lib/prisma';
-import { sendNotification } from '../../utils/notification.helper';
 
 export class DatasetService {
-  // ... existing methods ...
+  async getDatasets(userId: number, query: any = {}) {
+    const { search, startDate, endDate, sortBy = 'createdAt', sortOrder = 'desc' } = query;
 
-  async shareDataset(datasetId: number, sharedByUserId: number, targetUserId: number) {
-    // Existing share logic...
+    const where: any = {
+      OR: [
+        { userId },
+        {
+          permissions: {
+            some: { userId }
+          }
+        }
+      ]
+    };
 
-    // Send notification to target user
-    await sendNotification(
-      targetUserId,
-      'DATASET_SHARED',
-      'Dataset Shared With You',
-      `A dataset has been shared with you. Dataset ID: ${datasetId}`
-    );
+    if (search) {
+      where.AND = [
+        {
+          OR: [
+            { name: { contains: search, mode: 'insensitive' } },
+            { description: { contains: search, mode: 'insensitive' } }
+          ]
+        }
+      ];
+    }
 
-    return { success: true };
+    if (startDate || endDate) {
+      where.createdAt = {};
+      if (startDate) where.createdAt.gte = new Date(startDate);
+      if (endDate) where.createdAt.lte = new Date(endDate);
+    }
+
+    return prisma.dataset.findMany({
+      where,
+      orderBy: { [sortBy]: sortOrder },
+      include: {
+        user: { select: { id: true, name: true, email: true } },
+        _count: { select: { versions: true } }
+      }
+    });
   }
+
+  // ... existing methods ...
 }
