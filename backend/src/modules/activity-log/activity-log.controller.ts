@@ -3,16 +3,12 @@ import { ActivityLogService } from './activity-log.service';
 
 const activityLogService = new ActivityLogService();
 
-export const getActivityLogs = async (req: any, res: Response) => {
+export const getActivityHeatmap = async (req: any, res: Response) => {
   try {
-    const logs = await activityLogService.getActivityLogs(req.user.id, req.query);
-    if (req.query.format === 'csv') {
-      res.setHeader('Content-Type', 'text/csv');
-      res.setHeader('Content-Disposition', 'attachment; filename=activity-logs.csv');
-    }
-    res.send(logs);
+    const heatmap = await activityLogService.getActivityHeatmap(req.user.id);
+    res.json({ success: true, data: heatmap });
   } catch (error) {
-    res.status(500).json({ success: false, message: 'Failed to fetch activity logs' });
+    res.status(500).json({ success: false, message: 'Failed to fetch activity heatmap' });
   }
 };
 

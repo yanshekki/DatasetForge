@@ -1,63 +1,56 @@
-import { useEffect, useState } from 'react'
-import { Typography, Container, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, CircularProgress, Box } from '@mui/material'
-import api from '../api/axios'
-import { useSnackbar } from 'notistack'
+import { useQuery } from '@tanstack/react-query';
+import { Typography, Container, Paper, Box, Grid } from '@mui/material';
+import { api } from '../api/axios';
 
 export default function ActivityLogPage() {
-  const [logs, setLogs] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
-  const { enqueueSnackbar } = useSnackbar()
+  const { data: heatmap, isLoading } = useQuery({
+    queryKey: ['activityHeatmap'],
+    queryFn: () => api.get('/activity-logs/heatmap').then(res => res.data.data),
+  });
 
-  const fetchLogs = async () => {
-    try {
-      const res = await api.get('/activity-logs')
-      setLogs(res.data.data)
-    } catch (err) {
-      enqueueSnackbar('Failed to load activity logs', { variant: 'error' })
-    } finally {
-      setLoading(false)
-    }
-  }
+  if (isLoading) return <Typography>Loading...</Typography>;
 
-  useEffect(() => {
-    fetchLogs()
-  }, [])
+  const dates = Object.keys(heatmap || {}).sort();
+  const maxCount = Math.max(...Object.values(heatmap || {}), 1);
+
+  const getColor = (count: number) => {
+    const intensity = Math.min(count / maxCount, 1);
+    return `rgba(25, 118, 210, ${intensity})`;
+  };
 
   return (
     <Container>
-      <Typography variant="h4" gutterBottom>Activity Log</Typography>
-      <Typography color="text.secondary" sx={{ mb: 3 }}>
-        View your recent actions in the system.
-      </Typography>
-
-      {loading ? (
-        <Box display="flex" justifyContent="center" mt={8}>
-          <CircularProgress size={60} />
-        </Box>
-      ) : logs.length === 0 ? (
-        <Typography color="text.secondary">No activity logs found.</Typography>
-      ) : (
-        <TableContainer component={Paper} elevation={2}>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell><strong>Action</strong></TableCell>
-                <TableCell><strong>Details</strong></TableCell>
-                <TableCell><strong>Time</strong></TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {logs.map((log) => (
-                <TableRow key={log.id}>
-                  <TableCell>{log.action}</TableCell>
-                  <TableCell>{log.details || '-'}</TableCell>
-                  <TableCell>{new Date(log.createdAt).toLocaleString()}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      )}
+      <Typography variant="h4" gutterBottom>Activity Heatmap</Typography>
+      <Paper sx={{ p: 3, mt: 3 }}>
+        <Typography variant="h6" gutterBottom>Last 30 Days Activity</Typography>
+        <Grid container spacing={0.5} sx={{ mt: 2 }}>
+          {dates.map((date, index) => (
+            <Grid item key={index} xs={1}>
+              <Box
+                sx={{
+                  height: 30,
+                  backgroundColor: getColor(heatmap[date]),
+                  borderRadius: 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '10px',
+                  color: 'white',
+                  fontWeight: 'bold'
+                }}
+              >
+                {heatmap[date]}
+              </Box>
+              <Typography variant="caption" sx={{ display: 'block', textAlign: 'center', mt: 0.5 }}>
+                {date.split('-').slice(1).join('/')}
+              </Typography>
+            </Grid>
+          ))}
+        </Grid>
+        <Typography variant="caption" color="text.secondary" sx={{ mt: 2, display: 'block' }}>
+          Darker = More activity
+        </Typography>
+      </Paper>
     </Container>
-  )
+  );
 }
