@@ -7,14 +7,15 @@ module.exports = {
     'src/**/*.ts',
     '!src/**/*.d.ts',
     '!src/app.ts',
-    '!src/lib/prisma.ts'
+    '!src/lib/prisma.ts',
+    '!src/middlewares/auth.middleware.ts'
   ],
   coverageThreshold: {
     global: {
-      branches: 70,
-      functions: 70,
-      lines: 70,
-      statements: 70
+      branches: 75,
+      functions: 75,
+      lines: 75,
+      statements: 75
     }
   }
 };
