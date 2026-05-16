@@ -1,55 +1,46 @@
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '../../lib/prisma';
 import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
-import { RegisterDto, LoginDto } from './auth.dto';
-
-const prisma = new PrismaClient();
 
 export class AuthService {
-  async register(data: RegisterDto) {
-    const existingUser = await prisma.user.findUnique({ where: { email: data.email } });
-    if (existingUser) throw new Error('User with this email already exists');
-
+  async register(data: any) {
     const hashedPassword = await bcrypt.hash(data.password, 10);
-
-    const user = await prisma.user.create({
+    return prisma.user.create({
       data: {
         email: data.email,
         password: hashedPassword,
         name: data.name,
       },
     });
-
-    return this.generateTokens(user);
   }
 
-  async login(data: LoginDto) {
-    const user = await prisma.user.findUnique({ where: { email: data.email } });
-    if (!user) throw new Error('Invalid email or password');
+  async login(email: string, password: string) {
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user) throw new Error('User not found');
 
-    const isValidPassword = await bcrypt.compare(data.password, user.password);
-    if (!isValidPassword) throw new Error('Invalid email or password');
+    const isValid = await bcrypt.compare(password, user.password);
+    if (!isValid) throw new Error('Invalid password');
 
-    return this.generateTokens(user);
+    return user;
   }
 
-  private generateTokens(user: any) {
-    const accessToken = jwt.sign(
-      { id: user.id, email: user.email },
-      process.env.JWT_SECRET!,
-      { expiresIn: '15m' }
-    );
+  async updateProfile(userId: number, data: any) {
+    return prisma.user.update({
+      where: { id: userId },
+      data: { name: data.name },
+    });
+  }
 
-    const refreshToken = jwt.sign(
-      { id: user.id },
-      process.env.JWT_REFRESH_SECRET!,
-      { expiresIn: '7d' }
-    );
+  async changePassword(userId: number, currentPassword: string, newPassword: string) {
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new Error('User not found');
 
-    return {
-      accessToken,
-      refreshToken,
-      user: { id: user.id, email: user.email, name: user.name },
-    };
+    const isValid = await bcrypt.compare(currentPassword, user.password);
+    if (!isValid) throw new Error('Current password is incorrect');
+
+    const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+    return prisma.user.update({
+      where: { id: userId },
+      data: { password: hashedNewPassword },
+    });
   }
 }
