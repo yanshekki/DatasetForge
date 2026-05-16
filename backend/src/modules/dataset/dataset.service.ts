@@ -1,33 +1,46 @@
 import { prisma } from '../../lib/prisma';
-import archiver from 'archiver';
-import { PassThrough } from 'stream';
+import { Parser } from 'json2csv';
 
 export class DatasetService {
-  async exportDatasetAsZip(datasetId: number): Promise<Buffer> {
+  async exportDatasetAsCSV(datasetId: number): Promise<string> {
     const dataset = await prisma.dataset.findUnique({
       where: { id: datasetId },
-      include: { versions: true }
+      include: {
+        versions: true,
+        tags: true,
+        comments: { include: { user: { select: { name: true } } } }
+      }
     });
 
     if (!dataset) throw new Error('Dataset not found');
 
-    const archive = archiver('zip', { zlib: { level: 9 } });
-    const stream = new PassThrough();
-    const chunks: Buffer[] = [];
+    const data = [{
+      id: dataset.id,
+      name: dataset.name,
+      description: dataset.description,
+      downloadCount: dataset.downloadCount,
+      createdAt: dataset.createdAt,
+      versions: JSON.stringify(dataset.versions),
+      tags: JSON.stringify(dataset.tags),
+      comments: JSON.stringify(dataset.comments)
+    }];
 
-    archive.pipe(stream);
+    const parser = new Parser();
+    return parser.parse(data);
+  }
 
-    stream.on('data', (chunk) => chunks.push(chunk));
+  async exportDatasetAsJSON(datasetId: number): Promise<any> {
+    const dataset = await prisma.dataset.findUnique({
+      where: { id: datasetId },
+      include: {
+        versions: true,
+        tags: true,
+        comments: { include: { user: { select: { name: true } } } }
+      }
+    });
 
-    for (const version of dataset.versions) {
-      // In a real implementation, you would download the file from MinIO
-      // and add it to the archive. For now, we add a placeholder.
-      archive.append(`Placeholder for ${version.fileName}`, { name: version.fileName });
-    }
-
-    await archive.finalize();
-
-    return Buffer.concat(chunks);
+    if (!dataset) throw new Error('Dataset not found');
+    return dataset;
   }
 
   // ... existing methods ...
