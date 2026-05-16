@@ -1,87 +1,14 @@
-generator client {
-  provider = "prisma-client-js"
-}
-
-datasource db {
-  provider = "mysql"
-  url      = env("DATABASE_URL")
-}
-
-// ======================
-// Enums
-// ======================
-enum TaskType {
-  TEXT_CLASSIFICATION
-  IMAGE_CLASSIFICATION
-  OBJECT_DETECTION
-  SEMANTIC_SEGMENTATION
-  LLM_FINE_TUNE
-  MULTIMODAL
-  OTHER
-}
-
-enum Visibility {
-  PRIVATE
-  PUBLIC
-  TEAM
-}
-
-// ======================
-// Core Models
-// ======================
-
-model User {
+model Notification {
   id        Int      @id @default(autoincrement())
-  email     String   @unique
-  password  String
-  name      String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relations
-  datasets Dataset[]
-
-  @@map("users")
-}
-
-model Dataset {
-  id          Int       @id @default(autoincrement())
-  name        String
-  description String?   @db.Text
-  taskType    TaskType  @default(OTHER)
-  tags        Json?     // e.g. ["nlp", "chinese", "vision"]
-  isPublic    Boolean   @default(false)
-  visibility  Visibility @default(PRIVATE)
-  ownerId     Int
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relations
-  owner    User             @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  versions DatasetVersion[]
-
-  @@index([ownerId])
-  @@index([taskType])
-  @@map("datasets")
-}
-
-model DatasetVersion {
-  id          Int      @id @default(autoincrement())
-  datasetId   Int
-  version     String   // e.g. "v1.0", "2026-05-15-v1"
-  description String?  @db.Text
-  filePath    String?  // MinIO / S3 object key
-  size        BigInt?  // bytes
-  rowCount    Int?
-  metadata    Json?    // stats, schema, quality metrics, embedding info etc.
-
+  userId    Int
+  type      String   // e.g. 'DATASET_SHARED', 'VERSION_UPLOADED', 'TEAM_INVITED'
+  title     String
+  message   String
+  isRead    Boolean  @default(false)
   createdAt DateTime @default(now())
 
-  // Relations
-  dataset Dataset @relation(fields: [datasetId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id])
 
-  @@index([datasetId])
-  @@index([version])
-  @@map("dataset_versions")
+  @@index([userId])
+  @@index([createdAt])
 }
