@@ -13,6 +13,7 @@ import uploadRoutes from './modules/upload/upload.route';
 import activityLogRoutes from './modules/activity-log/activity-log.route';
 import teamRoutes from './modules/team/team.route';
 import notificationRoutes from './modules/notification/notification.route';
+import shareLinkRoutes from './modules/share-link/share-link.route';
 import { authenticateToken } from './middlewares/auth.middleware';
 import { errorHandler } from './middlewares/error.middleware';
 import { apiLimiter } from './middlewares/rate-limit.middleware';
@@ -39,6 +40,7 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // Public routes
 app.use('/api/auth', authRoutes);
+app.use('/api/shared', shareLinkRoutes);
 
 // Protected routes
 app.use('/api/datasets', authenticateToken, datasetRoutes);

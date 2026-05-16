@@ -1,23 +1,12 @@
-model Tag {
-  id        Int       @id @default(autoincrement())
-  name      String    @unique
-  createdAt DateTime  @default(now())
-
-  datasets  Dataset[] @relation("DatasetTags")
-}
-
-model Dataset {
+model ShareLink {
   id          Int      @id @default(autoincrement())
-  name        String
-  description String?
-  userId      Int
+  datasetId   Int
+  token       String   @unique
+  permission  String   @default("READ") // READ or WRITE
+  expiresAt   DateTime?
   createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
 
-  user        User      @relation(fields: [userId], references: [id])
-  versions    DatasetVersion[]
-  permissions DatasetPermission[]
-  tags        Tag[]     @relation("DatasetTags")
+  dataset     Dataset  @relation(fields: [datasetId], references: [id])
 
-  @@index([userId])
+  @@index([token])
 }
