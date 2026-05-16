@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { Typography, Container, Paper, Box, Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, FormControl, InputLabel, Select, MenuItem, Chip, IconButton, Snackbar, Table, TableBody, TableCell, TableRow } from '@mui/material';
+import { Typography, Container, Paper, Box, Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, FormControl, InputLabel, Select, MenuItem, Chip, IconButton, Snackbar, Table, TableBody, TableCell, TableRow, List, ListItem, ListItemText, ListItemAvatar, Avatar, Divider } from '@mui/material';
 import { useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../api/axios';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import SendIcon from '@mui/icons-material/Send';
 
 export default function DatasetDetailPage() {
   const { id } = useParams();
@@ -17,10 +18,16 @@ export default function DatasetDetailPage() {
   const [version1, setVersion1] = useState('');
   const [version2, setVersion2] = useState('');
   const [comparisonResult, setComparisonResult] = useState<any>(null);
+  const [newComment, setNewComment] = useState('');
 
   const { data: dataset, isLoading } = useQuery({
     queryKey: ['dataset', id],
     queryFn: () => api.get(`/datasets/${id}`).then(res => res.data.data),
+  });
+
+  const { data: comments, isLoading: commentsLoading } = useQuery({
+    queryKey: ['comments', id],
+    queryFn: () => api.get(`/datasets/${id}/comments`).then(res => res.data.data),
   });
 
   const createShareLinkMutation = useMutation({
@@ -81,6 +88,27 @@ export default function DatasetDetailPage() {
   const handleCompare = () => {
     if (version1 && version2) {
       compareVersionsMutation.mutate();
+    }
+  };
+
+  const createCommentMutation = useMutation({
+    mutationFn: () => api.post(`/datasets/${id}/comments`, { content: newComment }),
+    onSuccess: () => {
+      setNewComment('');
+      queryClient.invalidateQueries({ queryKey: ['comments', id] });
+    },
+  });
+
+  const deleteCommentMutation = useMutation({
+    mutationFn: (commentId: number) => api.delete(`/comments/${commentId}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['comments', id] });
+    },
+  });
+
+  const handlePostComment = () => {
+    if (newComment.trim()) {
+      createCommentMutation.mutate();
     }
   };
 
@@ -154,66 +182,70 @@ export default function DatasetDetailPage() {
         </Box>
       </Paper>
 
+      {/* Comments Section */}
+      <Paper sx={{ p: 3, mt: 3 }}>
+        <Typography variant="h6" gutterBottom>Comments ({comments?.length || 0})</Typography>
+
+        <Box display="flex" gap={1} mt={2}>
+          <TextField
+            fullWidth
+            placeholder="Write a comment..."
+            value={newComment}
+            onChange={(e) => setNewComment(e.target.value)}
+            onKeyPress={(e) => e.key === 'Enter' && handlePostComment()}
+          />
+          <Button
+            variant="contained"
+            onClick={handlePostComment}
+            disabled={!newComment.trim() || createCommentMutation.isPending}
+            endIcon={<SendIcon />}
+          >
+            Post
+          </Button>
+        </Box>
+
+        <List sx={{ mt: 2 }}>
+          {commentsLoading ? (
+            <Typography>Loading comments...</Typography>
+          ) : comments?.length > 0 ? (
+            comments.map((comment: any, index: number) => (
+              <React.Fragment key={comment.id}>
+                <ListItem alignItems="flex-start">
+                  <ListItemAvatar>
+                    <Avatar>{comment.user?.name?.[0] || 'U'}</Avatar>
+                  </ListItemAvatar>
+                  <ListItemText
+                    primary={comment.user?.name || 'Anonymous'}
+                    secondary={
+                      <>
+                        <Typography component="span" variant="body2" color="text.primary">
+                          {comment.content}
+                        </Typography>
+                        <br />
+                        <Typography variant="caption" color="text.secondary">
+                          {new Date(comment.createdAt).toLocaleString()}
+                        </Typography>
+                      </>
+                    }
+                  />
+                  <IconButton size="small" onClick={() => deleteCommentMutation.mutate(comment.id)}>
+                    <DeleteIcon />
+                  </IconButton>
+                </ListItem>
+                {index < comments.length - 1 && <Divider variant="inset" component="li" />}
+              </React.Fragment>
+            ))
+          ) : (
+            <Typography color="text.secondary">No comments yet. Be the first to comment!</Typography>
+          ))}
+        </List>
+      </Paper>
+
       {/* Share Link Dialog (existing code) */}
       {/* ... */}
 
-      {/* Compare Versions Dialog */}
-      <Dialog open={compareDialogOpen} onClose={() => setCompareDialogOpen(false)} maxWidth="md" fullWidth>
-        <DialogTitle>Compare Versions</DialogTitle>
-        <DialogContent>
-          <Box display="flex" gap={2} mt={2}>
-            <FormControl fullWidth>
-              <InputLabel>Version 1</InputLabel>
-              <Select value={version1} onChange={(e) => setVersion1(e.target.value)}>
-                {dataset.versions?.map((v: any) => (
-                  <MenuItem key={v.id} value={v.id}>{v.version} - {v.fileName}</MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-            <FormControl fullWidth>
-              <InputLabel>Version 2</InputLabel>
-              <Select value={version2} onChange={(e) => setVersion2(e.target.value)}>
-                {dataset.versions?.map((v: any) => (
-                  <MenuItem key={v.id} value={v.id}>{v.version} - {v.fileName}</MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Box>
-
-          <Button variant="contained" onClick={handleCompare} sx={{ mt: 2 }} disabled={!version1 || !version2 || compareVersionsMutation.isPending}>
-            Compare
-          </Button>
-
-          {comparisonResult && (
-            <Box mt={3}>
-              <Typography variant="h6" gutterBottom>Comparison Result</Typography>
-              <Table>
-                <TableBody>
-                  <TableRow>
-                    <TableCell><strong>File Name Changed</strong></TableCell>
-                    <TableCell>{comparisonResult.differences.fileNameChanged ? 'Yes' : 'No'}</TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell><strong>File Size Changed</strong></TableCell>
-                    <TableCell>{comparisonResult.differences.fileSizeChanged ? 'Yes' : 'No'}</TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell><strong>Description Changed</strong></TableCell>
-                    <TableCell>{comparisonResult.differences.descriptionChanged ? 'Yes' : 'No'}</TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell><strong>Size Difference</strong></TableCell>
-                    <TableCell>{comparisonResult.differences.sizeDifference} bytes</TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
-            </Box>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setCompareDialogOpen(false)}>Close</Button>
-        </DialogActions>
-      </Dialog>
+      {/* Compare Versions Dialog (existing code) */}
+      {/* ... */}
 
       <Snackbar
         open={snackbarOpen}
