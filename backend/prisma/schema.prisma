@@ -1,12 +1,16 @@
-model Comment {
-  id        Int      @id @default(autoincrement())
-  datasetId Int
-  userId    Int
-  content   String
-  createdAt DateTime @default(now())
+model Dataset {
+  id            Int      @id @default(autoincrement())
+  name          String
+  description   String?
+  userId        Int
+  downloadCount Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
-  dataset   Dataset  @relation(fields: [datasetId], references: [id])
-  user      User     @relation(fields: [userId], references: [id])
+  user          User      @relation(fields: [userId], references: [id])
+  versions      DatasetVersion[]
+  permissions   DatasetPermission[]
+  tags          Tag[]     @relation("DatasetTags")
 
-  @@index([datasetId])
+  @@index([userId])
 }
