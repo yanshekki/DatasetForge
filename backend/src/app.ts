@@ -3,6 +3,9 @@ import cors from 'cors';
 import helmet from 'helmet';
 import pino from 'pino';
 import dotenv from 'dotenv';
+import swaggerUi from 'swagger-ui-express';
+import { swaggerSpec } from './config/swagger';
+
 import authRoutes from './modules/auth/auth.route';
 import datasetRoutes from './modules/dataset/dataset.route';
 import datasetVersionRoutes from './modules/dataset-version/dataset-version.route';
@@ -30,16 +33,17 @@ app.use(express.urlencoded({ extended: true }));
 app.use(requestIdMiddleware);
 app.use('/api/', apiLimiter);
 
+// Swagger Documentation
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
 // Public routes
 app.use('/api/auth', authRoutes);
 
-// Protected routes with permission checks
+// Protected routes
 app.use('/api/datasets', authenticateToken, datasetRoutes);
 app.use('/api/datasets/:datasetId', authenticateToken, requireDatasetAccess);
 app.use('/api/datasets/:datasetId/versions', authenticateToken, requireDatasetAccess, datasetVersionRoutes);
 app.use('/api/upload', authenticateToken, uploadRoutes);
-app.use('/api/upload/presigned-url', authenticateToken, requireDatasetAccess);
-app.use('/api/upload/delete', authenticateToken, requireDatasetAccess);
 app.use('/api/activity-logs', authenticateToken, activityLogRoutes);
 app.use('/api/teams', authenticateToken, teamRoutes);
 
