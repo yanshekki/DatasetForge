@@ -47,6 +47,13 @@ export default function DatasetDetailPage() {
     },
   });
 
+  const incrementVersionDownloadMutation = useMutation({
+    mutationFn: (versionId: number) => api.post(`/datasets/${id}/versions/${versionId}/download`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['dataset', id] });
+    },
+  });
+
   const exportZipMutation = useMutation({
     mutationFn: () => api.get(`/datasets/${id}/export`, { responseType: 'blob' }),
     onSuccess: (res) => {
@@ -111,7 +118,15 @@ export default function DatasetDetailPage() {
           <Typography variant="h6" gutterBottom>Versions</Typography>
           {dataset.versions?.length > 0 ? (
             dataset.versions.map((v: any) => (
-              <Chip key={v.id} label={v.version} sx={{ mr: 1, mb: 1 }} />
+              <Box key={v.id} display="flex" alignItems="center" gap={1} mb={1}>
+                <Chip label={v.version} />
+                <Typography variant="body2" color="text.secondary">
+                  Downloads: {v.downloadCount || 0}
+                </Typography>
+                <Button size="small" onClick={() => incrementVersionDownloadMutation.mutate(v.id)}>
+                  Download
+                </Button>
+              </Box>
             ))
           ) : (
             <Typography color="text.secondary">No versions yet</Typography>
