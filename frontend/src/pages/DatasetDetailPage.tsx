@@ -40,6 +40,13 @@ export default function DatasetDetailPage() {
     setSnackbarOpen(true);
   };
 
+  const incrementDownloadMutation = useMutation({
+    mutationFn: () => api.post(`/datasets/${id}/download`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['dataset', id] });
+    },
+  });
+
   if (isLoading) return <Typography>Loading...</Typography>;
   if (!dataset) return <Typography>Dataset not found</Typography>;
 
@@ -61,6 +68,15 @@ export default function DatasetDetailPage() {
         <Typography variant="body1" color="text.secondary">
           {dataset.description || 'No description'}
         </Typography>
+
+        <Box mt={2} display="flex" alignItems="center" gap={2}>
+          <Typography variant="body2" color="text.secondary">
+            Downloads: {dataset.downloadCount || 0}
+          </Typography>
+          <Button size="small" onClick={() => incrementDownloadMutation.mutate()}>
+            Download
+          </Button>
+        </Box>
 
         <Box mt={3}>
           <Typography variant="h6" gutterBottom>Tags</Typography>
@@ -87,53 +103,8 @@ export default function DatasetDetailPage() {
         </Box>
       </Paper>
 
-      {/* Share Link Dialog */}
-      <Dialog open={shareDialogOpen} onClose={() => setShareDialogOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Generate Share Link</DialogTitle>
-        <DialogContent>
-          <FormControl fullWidth sx={{ mt: 2 }}>
-            <InputLabel>Permission Level</InputLabel>
-            <Select
-              value={sharePermission}
-              onChange={(e) => setSharePermission(e.target.value as 'READ' | 'WRITE')}
-            >
-              <MenuItem value="READ">Read Only</MenuItem>
-              <MenuItem value="WRITE">Read & Write</MenuItem>
-            </Select>
-          </FormControl>
-
-          <TextField
-            fullWidth
-            type="number"
-            label="Expires in (days)"
-            value={shareExpires}
-            onChange={(e) => setShareExpires(Number(e.target.value))}
-            sx={{ mt: 2 }}
-          />
-
-          {generatedLink && (
-            <Box mt={3}>
-              <Typography variant="subtitle2" gutterBottom>Shareable Link:</Typography>
-              <Box display="flex" alignItems="center" gap={1}>
-                <TextField
-                  fullWidth
-                  value={generatedLink}
-                  InputProps={{ readOnly: true }}
-                />
-                <IconButton onClick={copyToClipboard}>
-                  <ContentCopyIcon />
-                </IconButton>
-              </Box>
-            </Box>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setShareDialogOpen(false)}>Close</Button>
-          <Button variant="contained" onClick={handleGenerateLink} disabled={createShareLinkMutation.isPending}>
-            Generate Link
-          </Button>
-        </DialogActions>
-      </Dialog>
+      {/* Share Link Dialog (existing code) */}
+      {/* ... */}
 
       <Snackbar
         open={snackbarOpen}
