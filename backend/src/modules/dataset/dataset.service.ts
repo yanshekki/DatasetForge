@@ -1,44 +1,33 @@
 import { prisma } from '../../lib/prisma';
 
 export class DatasetService {
-  async getDatasets(userId: number, query: any = {}) {
-    const { search, startDate, endDate, sortBy = 'createdAt', sortOrder = 'desc' } = query;
+  async addTagToDataset(datasetId: number, tagName: string) {
+    const tag = await prisma.tag.upsert({
+      where: { name: tagName },
+      update: {},
+      create: { name: tagName },
+    });
 
-    const where: any = {
-      OR: [
-        { userId },
-        {
-          permissions: {
-            some: { userId }
-          }
+    return prisma.dataset.update({
+      where: { id: datasetId },
+      data: {
+        tags: {
+          connect: { id: tag.id }
         }
-      ]
-    };
+      },
+      include: { tags: true }
+    });
+  }
 
-    if (search) {
-      where.AND = [
-        {
-          OR: [
-            { name: { contains: search, mode: 'insensitive' } },
-            { description: { contains: search, mode: 'insensitive' } }
-          ]
+  async removeTagFromDataset(datasetId: number, tagId: number) {
+    return prisma.dataset.update({
+      where: { id: datasetId },
+      data: {
+        tags: {
+          disconnect: { id: tagId }
         }
-      ];
-    }
-
-    if (startDate || endDate) {
-      where.createdAt = {};
-      if (startDate) where.createdAt.gte = new Date(startDate);
-      if (endDate) where.createdAt.lte = new Date(endDate);
-    }
-
-    return prisma.dataset.findMany({
-      where,
-      orderBy: { [sortBy]: sortOrder },
-      include: {
-        user: { select: { id: true, name: true, email: true } },
-        _count: { select: { versions: true } }
-      }
+      },
+      include: { tags: true }
     });
   }
 
