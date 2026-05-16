@@ -1,9 +1,13 @@
 import { Router } from 'express';
-import { DatasetVersionController } from './dataset-version.controller';
+import { getVersions, getVersionById, createVersion, compareVersions } from './dataset-version.controller';
+import { authenticateToken } from '../../middlewares/auth.middleware';
+import { requireDatasetAccess } from '../../middlewares/permission.middleware';
 
-const router = Router({ mergeParams: true });
+const router = Router();
 
-router.post('/', DatasetVersionController.create);
-router.get('/', DatasetVersionController.findByDataset);
+router.get('/', authenticateToken, requireDatasetAccess, getVersions);
+router.get('/compare', authenticateToken, requireDatasetAccess, compareVersions);
+router.get('/:id', authenticateToken, requireDatasetAccess, getVersionById);
+router.post('/', authenticateToken, requireDatasetAccess, createVersion);
 
 export default router;

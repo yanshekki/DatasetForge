@@ -1,21 +1,19 @@
 import { Request, Response } from 'express';
 import { DatasetVersionService } from './dataset-version.service';
-import { createVersionDto } from './dataset-version.dto';
-import { validateRequest } from '../../middlewares/validate.middleware';
 
-const versionService = new DatasetVersionService();
+const datasetVersionService = new DatasetVersionService();
 
-export class DatasetVersionController {
-  static async create(req: Request, res: Response) {
-    const datasetId = parseInt(req.params.datasetId);
-    const data = validateRequest(createVersionDto, req.body);
-    const result = await versionService.create(datasetId, data);
-    res.status(201).json({ success: true, data: result });
+export const compareVersions = async (req: Request, res: Response) => {
+  try {
+    const { versionId1, versionId2 } = req.query;
+    const diff = await datasetVersionService.compareVersions(
+      Number(versionId1),
+      Number(versionId2)
+    );
+    res.json({ success: true, data: diff });
+  } catch (error) {
+    res.status(400).json({ success: false, message: error instanceof Error ? error.message : 'Comparison failed' });
   }
+};
 
-  static async findByDataset(req: Request, res: Response) {
-    const datasetId = parseInt(req.params.datasetId);
-    const result = await versionService.findByDataset(datasetId);
-    res.json({ success: true, data: result });
-  }
-}
+// ... existing methods ...
