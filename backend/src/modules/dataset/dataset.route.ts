@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getAllDatasets, getDatasetById, createDataset, updateDataset, deleteDataset, incrementDownload, exportDataset } from './dataset.controller';
+import { getAllDatasets, getDatasetById, createDataset, updateDataset, deleteDataset, incrementDownload, exportDataset, exportDatasetCSV, exportDatasetJSON } from './dataset.controller';
 import { authenticateToken } from '../../middlewares/auth.middleware';
 
 const router = Router();
@@ -11,5 +11,7 @@ router.put('/:id', authenticateToken, updateDataset);
 router.delete('/:id', authenticateToken, deleteDataset);
 router.post('/:id/download', authenticateToken, incrementDownload);
 router.get('/:id/export', authenticateToken, exportDataset);
+router.get('/:id/export/csv', authenticateToken, exportDatasetCSV);
+router.get('/:id/export/json', authenticateToken, exportDatasetJSON);
 
 export default router;
