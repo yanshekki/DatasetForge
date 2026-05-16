@@ -3,7 +3,7 @@ import { Typography, Container, Paper, Box, Button, TextField, FormControlLabel,
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../api/axios';
 
-export default function UserSettingsPage() {
+export default function UserSettingsPage({ toggleTheme, currentMode }: { toggleTheme: () => void; currentMode: 'light' | 'dark' }) {
   const queryClient = useQueryClient();
   const [snackbarOpen, setSnackbarOpen] = useState(false);
 
@@ -14,7 +14,7 @@ export default function UserSettingsPage() {
 
   const [formData, setFormData] = useState({
     emailNotifications: true,
-    darkMode: false,
+    darkMode: currentMode === 'dark',
     language: 'en',
     ...preferences,
   });
@@ -30,6 +30,9 @@ export default function UserSettingsPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     updateMutation.mutate(formData);
+    if (formData.darkMode !== (currentMode === 'dark')) {
+      toggleTheme();
+    }
   };
 
   if (isLoading) return <Typography>Loading...</Typography>;
