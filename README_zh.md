@@ -37,7 +37,7 @@ DatasetForge 係一個現代化、全功能嘅 AI 訓練資料集管理平台，
 ### 後端
 - **執行環境**：Node.js + TypeScript
 - **框架**：Express.js
-- **資料庫**：PostgreSQL + Prisma ORM
+- **資料庫**：MySQL + Prisma ORM
 - **認證**：JWT（Access + Refresh Token）+ bcrypt
 - **檔案儲存**：MinIO（相容 S3）
 - **郵件**：Nodemailer
@@ -83,7 +83,7 @@ DatasetForge/
 ### 前置條件
 - Node.js 18+
 - Docker + Docker Compose
-- PostgreSQL（或使用 docker-compose）
+- MySQL（或使用 docker-compose）
 
 ### 後端設定
 ```bash
