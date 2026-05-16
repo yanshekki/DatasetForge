@@ -1,20 +1,12 @@
 import { prisma } from '../../lib/prisma';
 
 export class UserService {
-  async updateUserPreferences(userId: number, preferences: any) {
+  async updateProfilePicture(userId: number, pictureUrl: string) {
     return prisma.user.update({
       where: { id: userId },
-      data: {
-        preferences: preferences,
-      },
+      data: { profilePicture: pictureUrl },
     });
   }
 
-  async getUserPreferences(userId: number) {
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { preferences: true }
-    });
-    return user?.preferences || {};
-  }
+  // ... existing methods ...
 }
