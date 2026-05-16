@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Typography, Container, Paper, Box, Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, FormControl, InputLabel, Select, MenuItem, Chip, IconButton, Snackbar } from '@mui/material';
+import { Typography, Container, Paper, Box, Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, FormControl, InputLabel, Select, MenuItem, Chip, IconButton, Snackbar, Table, TableBody, TableCell, TableRow } from '@mui/material';
 import { useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../api/axios';
@@ -13,6 +13,10 @@ export default function DatasetDetailPage() {
   const [shareExpires, setShareExpires] = useState(7);
   const [generatedLink, setGeneratedLink] = useState('');
   const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [compareDialogOpen, setCompareDialogOpen] = useState(false);
+  const [version1, setVersion1] = useState('');
+  const [version2, setVersion2] = useState('');
+  const [comparisonResult, setComparisonResult] = useState<any>(null);
 
   const { data: dataset, isLoading } = useQuery({
     queryKey: ['dataset', id],
@@ -67,6 +71,19 @@ export default function DatasetDetailPage() {
     },
   });
 
+  const compareVersionsMutation = useMutation({
+    mutationFn: () => api.get(`/datasets/${id}/versions/compare?versionId1=${version1}&versionId2=${version2}`),
+    onSuccess: (res) => {
+      setComparisonResult(res.data.data);
+    },
+  });
+
+  const handleCompare = () => {
+    if (version1 && version2) {
+      compareVersionsMutation.mutate();
+    }
+  };
+
   if (isLoading) return <Typography>Loading...</Typography>;
   if (!dataset) return <Typography>Dataset not found</Typography>;
 
@@ -83,6 +100,9 @@ export default function DatasetDetailPage() {
           </Button>
           <Button variant="contained" color="secondary" onClick={() => exportZipMutation.mutate()}>
             Export ZIP
+          </Button>
+          <Button variant="outlined" onClick={() => setCompareDialogOpen(true)}>
+            Compare Versions
           </Button>
         </Box>
       </Box>
@@ -136,6 +156,64 @@ export default function DatasetDetailPage() {
 
       {/* Share Link Dialog (existing code) */}
       {/* ... */}
+
+      {/* Compare Versions Dialog */}
+      <Dialog open={compareDialogOpen} onClose={() => setCompareDialogOpen(false)} maxWidth="md" fullWidth>
+        <DialogTitle>Compare Versions</DialogTitle>
+        <DialogContent>
+          <Box display="flex" gap={2} mt={2}>
+            <FormControl fullWidth>
+              <InputLabel>Version 1</InputLabel>
+              <Select value={version1} onChange={(e) => setVersion1(e.target.value)}>
+                {dataset.versions?.map((v: any) => (
+                  <MenuItem key={v.id} value={v.id}>{v.version} - {v.fileName}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <FormControl fullWidth>
+              <InputLabel>Version 2</InputLabel>
+              <Select value={version2} onChange={(e) => setVersion2(e.target.value)}>
+                {dataset.versions?.map((v: any) => (
+                  <MenuItem key={v.id} value={v.id}>{v.version} - {v.fileName}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Box>
+
+          <Button variant="contained" onClick={handleCompare} sx={{ mt: 2 }} disabled={!version1 || !version2 || compareVersionsMutation.isPending}>
+            Compare
+          </Button>
+
+          {comparisonResult && (
+            <Box mt={3}>
+              <Typography variant="h6" gutterBottom>Comparison Result</Typography>
+              <Table>
+                <TableBody>
+                  <TableRow>
+                    <TableCell><strong>File Name Changed</strong></TableCell>
+                    <TableCell>{comparisonResult.differences.fileNameChanged ? 'Yes' : 'No'}</TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell><strong>File Size Changed</strong></TableCell>
+                    <TableCell>{comparisonResult.differences.fileSizeChanged ? 'Yes' : 'No'}</TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell><strong>Description Changed</strong></TableCell>
+                    <TableCell>{comparisonResult.differences.descriptionChanged ? 'Yes' : 'No'}</TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell><strong>Size Difference</strong></TableCell>
+                    <TableCell>{comparisonResult.differences.sizeDifference} bytes</TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setCompareDialogOpen(false)}>Close</Button>
+        </DialogActions>
+      </Dialog>
 
       <Snackbar
         open={snackbarOpen}
