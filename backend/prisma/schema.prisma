@@ -1,15 +1,14 @@
-model User {
-  id            Int      @id @default(autoincrement())
-  email         String   @unique
-  password      String
-  name          String?
-  profilePicture String?
-  preferences   Json?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+model DatasetVersion {
+  id          Int      @id @default(autoincrement())
+  datasetId   Int
+  userId      Int
+  version     String
+  fileName    String
+  fileSize    Int?
+  description String?
+  downloadCount Int    @default(0)
+  createdAt   DateTime @default(now())
 
-  datasets      Dataset[]
-  activityLogs  ActivityLog[]
-  comments      Comment[]
-  teamMembers   TeamMember[]
+  dataset     Dataset  @relation(fields: [datasetId], references: [id])
+  user        User     @relation(fields: [userId], references: [id])
 }
