@@ -1,8 +1,9 @@
 import { Router } from 'express';
-import { ActivityLogController } from './activity-log.controller';
+import { getActivityLogs } from './activity-log.controller';
+import { authenticateToken } from '../../middlewares/auth.middleware';
 
 const router = Router();
 
-router.get('/', ActivityLogController.findAll);
+router.get('/', authenticateToken, getActivityLogs);
 
 export default router;
