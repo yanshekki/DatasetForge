@@ -1,24 +1,33 @@
-import { PrismaClient } from '@prisma/client';
-import { CreateVersionDto } from './dataset-version.dto';
-
-const prisma = new PrismaClient();
+import { prisma } from '../../lib/prisma';
+import { sendNotification } from '../../utils/notification.helper';
 
 export class DatasetVersionService {
-  async create(datasetId: number, data: CreateVersionDto) {
-    return prisma.datasetVersion.create({
+  async createVersion(datasetId: number, userId: number, fileName: string) {
+    const version = await prisma.datasetVersion.create({
       data: {
         datasetId,
-        version: data.version,
-        description: data.description,
-        metadata: data.metadata || {},
+        userId,
+        fileName,
+        version: `v${Date.now()}`,
       },
     });
-  }
 
-  async findByDataset(datasetId: number) {
-    return prisma.datasetVersion.findMany({
-      where: { datasetId },
-      orderBy: { createdAt: 'desc' },
+    // Send notification to dataset owner
+    const dataset = await prisma.dataset.findUnique({
+      where: { id: datasetId },
+      include: { user: true },
     });
+
+    if (dataset?.user) {
+      await sendNotification(
+        dataset.userId,
+        'NEW_VERSION_UPLOADED',
+        'New Version Uploaded',
+        `A new version has been uploaded to your dataset: ${fileName}`,
+        dataset.user.email
+      );
+    }
+
+    return version;
   }
 }
