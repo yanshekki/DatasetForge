@@ -1,34 +1,78 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { Button, TextField, Container, Typography, Box } from '@mui/material'
-import api from '../api/axios'
+import { useState } from 'react';
+import { Typography, Container, Paper, Box, Button, TextField, Link } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
+import { useMutation } from '@tanstack/react-query';
+import { api } from '../api/axios';
 
-function RegisterPage() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [name, setName] = useState('')
-  const navigate = useNavigate()
+export default function RegisterPage({ showError }: { showError: (message: string) => void }) {
+  const navigate = useNavigate();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
 
-  const handleRegister = async () => {
-    try {
-      await api.post('/auth/register', { email, password, name })
-      navigate('/login')
-    } catch (err) {
-      alert('Registration failed')
-    }
-  }
+  const registerMutation = useMutation({
+    mutationFn: () => api.post('/auth/register', { email, password, name }),
+    onSuccess: () => {
+      navigate('/login');
+    },
+    onError: (error: any) => {
+      const message = error.response?.data?.message || 'Registration failed. Please try again.';
+      showError(message);
+    },
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    registerMutation.mutate();
+  };
 
   return (
     <Container maxWidth="sm">
       <Box mt={8}>
-        <Typography variant="h4" gutterBottom>Create Account</Typography>
-        <TextField fullWidth label="Name" margin="normal" value={name} onChange={e => setName(e.target.value)} />
-        <TextField fullWidth label="Email" margin="normal" value={email} onChange={e => setEmail(e.target.value)} />
-        <TextField fullWidth label="Password" type="password" margin="normal" value={password} onChange={e => setPassword(e.target.value)} />
-        <Button fullWidth variant="contained" onClick={handleRegister} sx={{ mt: 2 }}>Register</Button>
+        <Paper sx={{ p: 4 }}>
+          <Typography variant="h4" gutterBottom>Register</Typography>
+          <form onSubmit={handleSubmit}>
+            <TextField
+              fullWidth
+              label="Name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              margin="normal"
+              required
+            />
+            <TextField
+              fullWidth
+              label="Email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              margin="normal"
+              required
+            />
+            <TextField
+              fullWidth
+              label="Password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              margin="normal"
+              required
+            />
+            <Button
+              type="submit"
+              fullWidth
+              variant="contained"
+              sx={{ mt: 3 }}
+              disabled={registerMutation.isPending}
+            >
+              Register
+            </Button>
+          </form>
+          <Box mt={2} textAlign="center">
+            <Link href="/login">Already have an account? Login</Link>
+          </Box>
+        </Paper>
       </Box>
     </Container>
-  )
+  );
 }
-
-export default RegisterPage
