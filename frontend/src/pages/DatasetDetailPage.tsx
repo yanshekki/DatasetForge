@@ -1,137 +1,95 @@
-import { useEffect, useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
-import { Typography, Container, Button, List, ListItem, ListItemText, ListItemSecondaryAction, CircularProgress, Box, Paper, Chip } from '@mui/material'
-import { Download, ArrowBack, Delete } from '@mui/icons-material'
-import api from '../api/axios'
-import { useSnackbar } from 'notistack'
-import { useAuth } from '../contexts/AuthContext'
+import { useState } from 'react';
+import { Typography, Container, Paper, Box, Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, FormControl, InputLabel, Select, MenuItem, Chip } from '@mui/material';
+import { useParams } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { api } from '../api/axios';
 
 export default function DatasetDetailPage() {
-  const { id } = useParams()
-  const navigate = useNavigate()
-  const { user } = useAuth()
-  const [dataset, setDataset] = useState<any>(null)
-  const [versions, setVersions] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
-  const { enqueueSnackbar } = useSnackbar()
+  const { id } = useParams();
+  const queryClient = useQueryClient();
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const [shareEmail, setShareEmail] = useState('');
+  const [sharePermission, setSharePermission] = useState<'READ' | 'WRITE'>('READ');
 
-  const isOwner = dataset?.ownerId === user?.id
+  const { data: dataset, isLoading } = useQuery({
+    queryKey: ['dataset', id],
+    queryFn: () => api.get(`/datasets/${id}`).then(res => res.data.data),
+  });
 
-  const fetchData = async () => {
-    try {
-      const dsRes = await api.get(`/datasets/${id}`)
-      setDataset(dsRes.data.data)
+  const shareMutation = useMutation({
+    mutationFn: (data: any) => api.post(`/datasets/${id}/share`, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['dataset', id] });
+      setShareDialogOpen(false);
+      setShareEmail('');
+    },
+  });
 
-      const verRes = await api.get(`/datasets/${id}/versions`)
-      setVersions(verRes.data.data)
-    } catch (err) {
-      enqueueSnackbar('Failed to load dataset details', { variant: 'error' })
-    } finally {
-      setLoading(false)
-    }
-  }
+  const handleShare = () => {
+    shareMutation.mutate({
+      email: shareEmail,
+      permissionLevel: sharePermission,
+    });
+  };
 
-  const downloadVersion = async (version: string, fileName: string = 'data.csv') => {
-    try {
-      const res = await api.post('/upload/presigned-url', {
-        datasetId: parseInt(id!),
-        version,
-        fileName,
-        operation: 'download'
-      })
-      window.open(res.data.data.url, '_blank')
-      enqueueSnackbar('Download started', { variant: 'success' })
-    } catch (err) {
-      enqueueSnackbar('Failed to get download link', { variant: 'error' })
-    }
-  }
-
-  useEffect(() => {
-    if (id) fetchData()
-  }, [id])
-
-  if (loading) {
-    return (
-      <Container sx={{ display: 'flex', justifyContent: 'center', mt: 8 }}>
-        <CircularProgress size={60} />
-      </Container>
-    )
-  }
-
-  if (!dataset) {
-    return (
-      <Container>
-        <Typography>Dataset not found</Typography>
-        <Button onClick={() => navigate('/datasets')} sx={{ mt: 2 }}>Back to Datasets</Button>
-      </Container>
-    )
-  }
+  if (isLoading) return <Typography>Loading...</Typography>;
+  if (!dataset) return <Typography>Dataset not found</Typography>;
 
   return (
     <Container>
-      <Button startIcon={<ArrowBack />} onClick={() => navigate('/datasets')} sx={{ mb: 2 }}>
-        Back to Datasets
-      </Button>
-
-      <Box display="flex" alignItems="center" gap={2} mb={1}>
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
         <Typography variant="h4">{dataset.name}</Typography>
-        {isOwner && <Chip label="Owner" color="primary" size="small" />}
-      </Box>
-      <Typography color="text.secondary" gutterBottom>
-        {dataset.description || 'No description provided'}
-      </Typography>
-
-      <Box mt={4}>
-        <Box display="flex" alignItems="center" gap={2} mb={2}>
-          <Typography variant="h6">Versions</Typography>
-          <Chip label={`${versions.length} versions`} size="small" />
-        </Box>
-
-        {versions.length > 0 ? (
-          <Paper elevation={1}>
-            <List>
-              {versions.map((v, index) => (
-                <ListItem key={v.id} divider={index !== versions.length - 1}>
-                  <ListItemText
-                    primary={v.version}
-                    secondary={
-                      <>
-                        {v.description || 'No description'}<br />
-                        <Typography variant="caption" color="text.secondary">
-                          Created: {new Date(v.createdAt).toLocaleString()}
-                        </Typography>
-                      </>
-                    }
-                  />
-                  <ListItemSecondaryAction>
-                    <Button
-                      variant="outlined"
-                      startIcon={<Download />}
-                      onClick={() => downloadVersion(v.version)}
-                    >
-                      Download
-                    </Button>
-                  </ListItemSecondaryAction>
-                </ListItem>
-              ))}
-            </List>
-          </Paper>
-        ) : (
-          <Paper sx={{ p: 3, textAlign: 'center' }}>
-            <Typography color="text.secondary">
-              No versions yet. Upload files to create new versions.
-            </Typography>
-          </Paper>
-        )}
+        <Button variant="contained" onClick={() => setShareDialogOpen(true)}>
+          Share Dataset
+        </Button>
       </Box>
 
-      {isOwner && (
-        <Box mt={4}>
-          <Typography variant="subtitle2" color="text.secondary">
-            You have owner permissions on this dataset.
-          </Typography>
+      <Paper sx={{ p: 3 }}>
+        <Typography variant="body1" color="text.secondary">
+          {dataset.description || 'No description'}
+        </Typography>
+
+        <Box mt={3}>
+          <Typography variant="h6" gutterBottom>Versions</Typography>
+          {dataset.versions?.length > 0 ? (
+            dataset.versions.map((v: any) => (
+              <Chip key={v.id} label={v.version} sx={{ mr: 1, mb: 1 }} />
+            ))
+          ) : (
+            <Typography color="text.secondary">No versions yet</Typography>
+          ))}
         </Box>
-      )}
+      </Paper>
+
+      <Dialog open={shareDialogOpen} onClose={() => setShareDialogOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Share Dataset</DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            margin="dense"
+            label="User Email"
+            fullWidth
+            value={shareEmail}
+            onChange={(e) => setShareEmail(e.target.value)}
+          />
+          <FormControl fullWidth sx={{ mt: 2 }}>
+            <InputLabel>Permission Level</InputLabel>
+            <Select
+              value={sharePermission}
+              onChange={(e) => setSharePermission(e.target.value as 'READ' | 'WRITE')}
+            >
+              <MenuItem value="READ">Read Only</MenuItem>
+              <MenuItem value="WRITE">Read & Write</MenuItem>
+            </Select>
+          </FormControl>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setShareDialogOpen(false)}>Cancel</Button>
+          <Button variant="contained" onClick={handleShare} disabled={!shareEmail}>
+            Share
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Container>
-  )
+  );
 }
