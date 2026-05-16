@@ -1,42 +1,43 @@
 import { useState } from 'react';
-import { Typography, Container, Paper, Box, Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Chip, IconButton } from '@mui/material';
+import { Typography, Container, Paper, Box, Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, FormControl, InputLabel, Select, MenuItem, Chip, IconButton, Snackbar } from '@mui/material';
 import { useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../api/axios';
-import AddIcon from '@mui/icons-material/Add';
-import CloseIcon from '@mui/icons-material/Close';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 
 export default function DatasetDetailPage() {
   const { id } = useParams();
   const queryClient = useQueryClient();
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
-  const [tagDialogOpen, setTagDialogOpen] = useState(false);
-  const [newTag, setNewTag] = useState('');
+  const [sharePermission, setSharePermission] = useState<'READ' | 'WRITE'>('READ');
+  const [shareExpires, setShareExpires] = useState(7);
+  const [generatedLink, setGeneratedLink] = useState('');
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
 
   const { data: dataset, isLoading } = useQuery({
     queryKey: ['dataset', id],
     queryFn: () => api.get(`/datasets/${id}`).then(res => res.data.data),
   });
 
-  const addTagMutation = useMutation({
-    mutationFn: (tagName: string) => api.post(`/datasets/${id}/tags`, { tagName }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['dataset', id] });
-      setNewTag('');
+  const createShareLinkMutation = useMutation({
+    mutationFn: () => api.post(`/datasets/${id}/share-links`, {
+      permission: sharePermission,
+      expiresInDays: shareExpires,
+    }),
+    onSuccess: (res) => {
+      const token = res.data.data.token;
+      const link = `${window.location.origin}/shared/${token}`;
+      setGeneratedLink(link);
     },
   });
 
-  const removeTagMutation = useMutation({
-    mutationFn: (tagId: number) => api.delete(`/datasets/${id}/tags/${tagId}`),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['dataset', id] });
-    },
-  });
+  const handleGenerateLink = () => {
+    createShareLinkMutation.mutate();
+  };
 
-  const handleAddTag = () => {
-    if (newTag.trim()) {
-      addTagMutation.mutate(newTag.trim());
-    }
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(generatedLink);
+    setSnackbarOpen(true);
   };
 
   if (isLoading) return <Typography>Loading...</Typography>;
@@ -48,7 +49,7 @@ export default function DatasetDetailPage() {
         <Typography variant="h4">{dataset.name}</Typography>
         <Box>
           <Button variant="contained" onClick={() => setShareDialogOpen(true)} sx={{ mr: 1 }}>
-            Share
+            Share Link
           </Button>
           <Button variant="outlined" onClick={() => setTagDialogOpen(true)}>
             Manage Tags
@@ -66,13 +67,7 @@ export default function DatasetDetailPage() {
           <Box display="flex" flexWrap="wrap" gap={1}>
             {dataset.tags?.length > 0 ? (
               dataset.tags.map((tag: any) => (
-                <Chip
-                  key={tag.id}
-                  label={tag.name}
-                  onDelete={() => removeTagMutation.mutate(tag.id)}
-                  color="primary"
-                  variant="outlined"
-                />
+                <Chip key={tag.id} label={tag.name} color="primary" variant="outlined" />
               ))
             ) : (
               <Typography color="text.secondary">No tags yet</Typography>
@@ -92,41 +87,60 @@ export default function DatasetDetailPage() {
         </Box>
       </Paper>
 
-      {/* Tag Management Dialog */}
-      <Dialog open={tagDialogOpen} onClose={() => setTagDialogOpen(false)}>
-        <DialogTitle>Manage Tags</DialogTitle>
+      {/* Share Link Dialog */}
+      <Dialog open={shareDialogOpen} onClose={() => setShareDialogOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Generate Share Link</DialogTitle>
         <DialogContent>
-          <Box display="flex" gap={1} mb={2}>
-            <TextField
-              size="small"
-              placeholder="New tag name"
-              value={newTag}
-              onChange={(e) => setNewTag(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleAddTag()}
-            />
-            <Button variant="contained" onClick={handleAddTag} disabled={!newTag.trim()}>
-              Add
-            </Button>
-          </Box>
+          <FormControl fullWidth sx={{ mt: 2 }}>
+            <InputLabel>Permission Level</InputLabel>
+            <Select
+              value={sharePermission}
+              onChange={(e) => setSharePermission(e.target.value as 'READ' | 'WRITE')}
+            >
+              <MenuItem value="READ">Read Only</MenuItem>
+              <MenuItem value="WRITE">Read & Write</MenuItem>
+            </Select>
+          </FormControl>
 
-          <Box display="flex" flexWrap="wrap" gap={1}>
-            {dataset.tags?.map((tag: any) => (
-              <Chip
-                key={tag.id}
-                label={tag.name}
-                onDelete={() => removeTagMutation.mutate(tag.id)}
-                color="primary"
-              />
-            ))}
-          </Box>
+          <TextField
+            fullWidth
+            type="number"
+            label="Expires in (days)"
+            value={shareExpires}
+            onChange={(e) => setShareExpires(Number(e.target.value))}
+            sx={{ mt: 2 }}
+          />
+
+          {generatedLink && (
+            <Box mt={3}>
+              <Typography variant="subtitle2" gutterBottom>Shareable Link:</Typography>
+              <Box display="flex" alignItems="center" gap={1}>
+                <TextField
+                  fullWidth
+                  value={generatedLink}
+                  InputProps={{ readOnly: true }}
+                />
+                <IconButton onClick={copyToClipboard}>
+                  <ContentCopyIcon />
+                </IconButton>
+              </Box>
+            </Box>
+          )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setTagDialogOpen(false)}>Close</Button>
+          <Button onClick={() => setShareDialogOpen(false)}>Close</Button>
+          <Button variant="contained" onClick={handleGenerateLink} disabled={createShareLinkMutation.isPending}>
+            Generate Link
+          </Button>
         </DialogActions>
       </Dialog>
 
-      {/* Share Dialog (existing code) */}
-      {/* ... */}
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={3000}
+        onClose={() => setSnackbarOpen(false)}
+        message="Link copied to clipboard!"
+      />
     </Container>
   );
 }
