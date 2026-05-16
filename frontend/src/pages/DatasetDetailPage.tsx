@@ -47,6 +47,19 @@ export default function DatasetDetailPage() {
     },
   });
 
+  const exportZipMutation = useMutation({
+    mutationFn: () => api.get(`/datasets/${id}/export`, { responseType: 'blob' }),
+    onSuccess: (res) => {
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `dataset-${id}.zip`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    },
+  });
+
   if (isLoading) return <Typography>Loading...</Typography>;
   if (!dataset) return <Typography>Dataset not found</Typography>;
 
@@ -60,6 +73,9 @@ export default function DatasetDetailPage() {
           </Button>
           <Button variant="outlined" onClick={() => setTagDialogOpen(true)}>
             Manage Tags
+          </Button>
+          <Button variant="contained" color="secondary" onClick={() => exportZipMutation.mutate()}>
+            Export ZIP
           </Button>
         </Box>
       </Box>

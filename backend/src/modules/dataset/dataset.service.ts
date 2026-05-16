@@ -1,53 +1,33 @@
 import { prisma } from '../../lib/prisma';
+import archiver from 'archiver';
+import { PassThrough } from 'stream';
 
 export class DatasetService {
-  async getDatasets(userId: number, query: any = {}) {
-    const { search, startDate, endDate, sortBy = 'createdAt', sortOrder = 'desc' } = query;
-
-    const where: any = {
-      OR: [
-        { userId },
-        {
-          permissions: {
-            some: { userId }
-          }
-        }
-      ]
-    };
-
-    if (search) {
-      where.AND = [
-        {
-          OR: [
-            { name: { contains: search, mode: 'insensitive' } },
-            { description: { contains: search, mode: 'insensitive' } },
-            {
-              tags: {
-                some: {
-                  name: { contains: search, mode: 'insensitive' }
-                }
-              }
-            }
-          ]
-        }
-      ];
-    }
-
-    if (startDate || endDate) {
-      where.createdAt = {};
-      if (startDate) where.createdAt.gte = new Date(startDate);
-      if (endDate) where.createdAt.lte = new Date(endDate);
-    }
-
-    return prisma.dataset.findMany({
-      where,
-      orderBy: { [sortBy]: sortOrder },
-      include: {
-        user: { select: { id: true, name: true, email: true } },
-        tags: true,
-        _count: { select: { versions: true } }
-      }
+  async exportDatasetAsZip(datasetId: number): Promise<Buffer> {
+    const dataset = await prisma.dataset.findUnique({
+      where: { id: datasetId },
+      include: { versions: true }
     });
+
+    if (!dataset) throw new Error('Dataset not found');
+
+    const archive = archiver('zip', { zlib: { level: 9 } });
+    const stream = new PassThrough();
+    const chunks: Buffer[] = [];
+
+    archive.pipe(stream);
+
+    stream.on('data', (chunk) => chunks.push(chunk));
+
+    for (const version of dataset.versions) {
+      // In a real implementation, you would download the file from MinIO
+      // and add it to the archive. For now, we add a placeholder.
+      archive.append(`Placeholder for ${version.fileName}`, { name: version.fileName });
+    }
+
+    await archive.finalize();
+
+    return Buffer.concat(chunks);
   }
 
   // ... existing methods ...
