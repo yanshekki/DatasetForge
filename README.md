@@ -37,7 +37,7 @@ DatasetForge is a modern, full-featured platform designed for managing AI traini
 ### Backend
 - **Runtime**: Node.js + TypeScript
 - **Framework**: Express.js
-- **Database**: PostgreSQL + Prisma ORM
+- **Database**: MySQL + Prisma ORM
 - **Authentication**: JWT (Access + Refresh Tokens) + bcrypt
 - **File Storage**: MinIO (S3-compatible)
 - **Email**: Nodemailer
@@ -83,7 +83,7 @@ DatasetForge/
 ### Prerequisites
 - Node.js 18+
 - Docker + Docker Compose
-- PostgreSQL (or use docker-compose)
+- MySQL (or use docker-compose)
 
 ### Backend Setup
 ```bash
