@@ -22,20 +22,20 @@ export class NotificationService {
         if (type === 'COMMENT' && metadata) {
           subject = `New comment on ${metadata.datasetName}`;
           html = getCommentEmailTemplate(
-            metadata.datasetName,
-            metadata.commenterName,
-            metadata.content,
-            metadata.datasetUrl
+            metadata.datasetName || 'Dataset',
+            metadata.commenterName || 'Someone',
+            metadata.content || message,
+            metadata.datasetUrl || '#'
           );
         }
 
         if (type === 'MENTION' && metadata) {
           subject = `You were mentioned in ${metadata.datasetName}`;
           html = getMentionEmailTemplate(
-            metadata.datasetName,
-            metadata.mentionerName,
-            metadata.content,
-            metadata.datasetUrl
+            metadata.datasetName || 'Dataset',
+            metadata.mentionerName || 'Someone',
+            metadata.content || message,
+            metadata.datasetUrl || '#'
           );
         }
 
