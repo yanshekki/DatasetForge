@@ -1,49 +1,61 @@
-# Deployment Guide
+# DatasetForge Production Deployment Guide
 
-## Pre-deployment Checklist
+## Prerequisites
 
-- [ ] All environment variables are set in `.env`
-- [ ] Database is accessible and migrated
-- [ ] MinIO is running and accessible
-- [ ] JWT_SECRET is strong and unique
-- [ ] Docker and Docker Compose are installed
-- [ ] Ports 80, 3000, 9000, 9001 are available
+- Docker + Docker Compose v2+
+- Domain name (optional but recommended)
+- SSL certificate (Let's Encrypt recommended)
 
-## Quick Deployment (Recommended)
+## Quick Start (Production)
 
 ```bash
-# 1. Clone and setup
+# 1. Clone the repository
+
+# 2. Copy environment file
 cp .env.example .env
-# Edit .env with your values
 
-# 2. Build and start
- docker-compose up --build -d
+# 3. Edit .env with your production values
+# IMPORTANT: Change all default passwords and secrets!
 
-# 3. Check logs
- docker-compose logs -f
+# 4. Start production stack
+make docker-compose -f docker-compose.prod.yml up -d
+
+# 5. Run database migrations
+make docker exec -it datasetforge-backend-1 npx prisma migrate deploy
+
+# 6. Access the application
+# Frontend: http://your-domain.com
+# Backend API: http://your-domain.com/api
+# MinIO Console: http://your-domain.com:9001
 ```
 
-## Production Recommendations
+## Environment Variables Checklist
 
-- Use a reverse proxy (Nginx/Traefik) in front of the services
-- Enable HTTPS with Let's Encrypt
-- Use managed database (e.g. Supabase, Neon, or AWS RDS)
-- Set up monitoring (e.g. Prometheus + Grafana)
-- Regular database backups
-- Use secrets management (Docker Secrets or external vault)
+### Backend
+- [ ] `DATABASE_URL` - MySQL connection string
+- [ ] `JWT_SECRET` - Strong random secret (min 32 chars)
+- [ ] `MINIO_ENDPOINT` - MinIO server address
+- [ ] `MINIO_ACCESS_KEY` - MinIO access key
+- [ ] `MINIO_SECRET_KEY` - MinIO secret key
 
-## Health Checks
+### Database
+- [ ] `MYSQL_ROOT_PASSWORD` - Strong root password
+- [ ] `MYSQL_USER` - Application user
+- [ ] `MYSQL_PASSWORD` - Application user password
 
-- Backend: `GET /health`
-- Frontend: Should load successfully
-- MinIO: Console available at port 9001
+### Security
+- [ ] Change all default passwords
+- [ ] Enable HTTPS (reverse proxy + Let's Encrypt)
+- [ ] Set up firewall rules
+- [ ] Regular backups
 
-## Troubleshooting
+## Recommended Architecture
 
-- Check container logs: `docker-compose logs`
-- Restart services: `docker-compose restart`
-- Rebuild: `docker-compose up --build --force-recreate`
+- Use Nginx or Traefik as reverse proxy
+- Enable SSL/TLS
+- Set up automated backups for MySQL and MinIO
+- Monitor with Prometheus + Grafana (optional)
 
 ---
 
-<sub>Powered by [YSK Limited](https://ysk.hk/) — Hong Kong Remote Dev Team & Enterprise Solutions</sub>
+**Powered by [YSK Limited](https://ysk.hk/) — Hong Kong Remote Dev Team & Enterprise Solutions**
