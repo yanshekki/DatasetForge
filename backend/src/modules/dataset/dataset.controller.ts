@@ -1,30 +1,24 @@
-import { Request, Response } from 'express';
+import { Router } from 'express';
 import { DatasetService } from './dataset.service';
 
+const router = Router();
 const datasetService = new DatasetService();
 
-export const exportDatasetCSV = async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params;
-    const csv = await datasetService.exportDatasetAsCSV(Number(id));
-    res.setHeader('Content-Type', 'text/csv');
-    res.setHeader('Content-Disposition', `attachment; filename=dataset-${id}.csv`);
-    res.send(csv);
-  } catch (error) {
-    res.status(500).json({ success: false, message: 'Failed to export dataset as CSV' });
-  }
-};
+// ... existing routes ...
 
-export const exportDatasetJSON = async (req: Request, res: Response) => {
+// Advanced search
+router.get('/search', async (req, res) => {
   try {
-    const { id } = req.params;
-    const json = await datasetService.exportDatasetAsJSON(Number(id));
-    res.setHeader('Content-Type', 'application/json');
-    res.setHeader('Content-Disposition', `attachment; filename=dataset-${id}.json`);
-    res.json(json);
+    const { q, tags, sort = 'relevance' } = req.query;
+    const results = await datasetService.advancedSearch(
+      q as string,
+      tags as string,
+      sort as string
+    );
+    res.json({ success: true, data: results });
   } catch (error) {
-    res.status(500).json({ success: false, message: 'Failed to export dataset as JSON' });
+    res.status(500).json({ success: false, error: error.message });
   }
-};
+});
 
-// ... existing methods ...
+export default router;

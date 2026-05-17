@@ -1,35 +1,46 @@
 import { prisma } from '../../lib/prisma';
-import { minioClient } from '../../lib/minio';
 
 export class DatasetService {
-  async deleteVersion(datasetId: number, versionId: number) {
-    const version = await prisma.datasetVersion.findUnique({
-      where: { id: versionId },
-      include: { dataset: true }
-    });
+  async advancedSearch(query: string, tags?: string, sort: string = 'relevance') {
+    let whereClause: any = {};
 
-    if (!version) {
-      throw new Error('Version not found');
+    if (query) {
+      whereClause.OR = [
+        { name: { contains: query, mode: 'insensitive' } },
+        { description: { contains: query, mode: 'insensitive' } },
+      ];
     }
 
-    // Delete file from MinIO
-    try {
-      await minioClient.removeObject(
-        process.env.MINIO_BUCKET || 'datasets',
-        version.fileName
-      );
-      console.log(`Deleted file from MinIO: ${version.fileName}`);
-    } catch (error) {
-      console.error('Failed to delete file from MinIO:', error);
-      // Continue with database deletion even if MinIO deletion fails
+    if (tags) {
+      const tagList = tags.split(',').map(t => t.trim());
+      whereClause.tags = {
+        some: {
+          name: { in: tagList }
+        }
+      };
     }
 
-    // Delete from database
-    await prisma.datasetVersion.delete({
-      where: { id: versionId }
-    });
+    let orderBy: any = { createdAt: 'desc' };
 
-    return { success: true };
+    if (sort === 'relevance' && query) {
+      // Simple relevance: prioritize name matches
+      orderBy = [
+        { name: { sort: 'asc', nulls: 'last' } },
+        { createdAt: 'desc' }
+      ];
+    } else if (sort === 'downloads') {
+      orderBy = { downloadCount: 'desc' };
+    }
+
+    return prisma.dataset.findMany({
+      where: whereClause,
+      include: {
+        tags: true,
+        user: { select: { name: true } }
+      },
+      orderBy,
+      take: 50
+    });
   }
 
   // ... existing methods ...
