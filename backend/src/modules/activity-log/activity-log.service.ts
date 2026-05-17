@@ -1,27 +1,28 @@
 import { prisma } from '../../lib/prisma';
+import { stringify } from 'csv-stringify/sync';
 
 export class ActivityLogService {
-  async getActivityHeatmap(userId: number, days: number = 30) {
-    const startDate = new Date();
-    startDate.setDate(startDate.getDate() - days);
-
-    const logs = await prisma.activityLog.groupBy({
-      by: ['createdAt'],
-      where: {
-        userId,
-        createdAt: { gte: startDate }
+  async exportLogs(format: string = 'csv') {
+    const logs = await prisma.activityLog.findMany({
+      include: {
+        user: { select: { name: true, email: true } }
       },
-      _count: { id: true }
+      orderBy: { createdAt: 'desc' },
+      take: 10000
     });
 
-    // Convert to daily counts
-    const heatmap: Record<string, number> = {};
-    logs.forEach(log => {
-      const date = log.createdAt.toISOString().split('T')[0];
-      heatmap[date] = (heatmap[date] || 0) + log._count.id;
-    });
-
-    return heatmap;
+    if (format === 'csv') {
+      const records = logs.map(log => ({
+        id: log.id,
+        user: log.user?.name || log.user?.email,
+        type: log.type,
+        targetId: log.targetId,
+        createdAt: log.createdAt.toISOString()
+      }));
+      return stringify(records, { header: true });
+    } else {
+      return JSON.stringify(logs, null, 2);
+    }
   }
 
   // ... existing methods ...
