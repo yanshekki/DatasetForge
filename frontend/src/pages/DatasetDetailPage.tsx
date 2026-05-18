@@ -1,13 +1,12 @@
-import React from 'react';
-import { useParams } from 'react-router-dom';
-import { Box, Typography, Button, Chip } from '@mui/material';
-import CommentSection from '../components/CommentSection';
+import React, { useState } from 'react';
+import VersionComparisonDialog from '../components/VersionComparisonDialog';
 
-// ... existing imports and code ...
+// ... existing code ...
 
 export default function DatasetDetailPage({ showError }: { showError: (msg: string) => void }) {
   const { id } = useParams<{ id: string }>(); 
   const datasetId = parseInt(id || '0');
+  const [compareDialogOpen, setCompareDialogOpen] = useState(false);
 
   // ... existing code ...
 
@@ -15,8 +14,19 @@ export default function DatasetDetailPage({ showError }: { showError: (msg: stri
     <Box p={3}>
       {/* ... existing dataset details ... */}
 
-      {/* Comments Section */}
-      <CommentSection datasetId={datasetId} showError={showError} />
+      <Button variant="outlined" onClick={() => setCompareDialogOpen(true)}>
+        Compare Versions
+      </Button>
+
+      <VersionComparisonDialog
+        open={compareDialogOpen}
+        onClose={() => setCompareDialogOpen(false)}
+        datasetId={datasetId}
+        versions={dataset.versions || []}
+        showError={showError}
+      />
+
+      {/* ... existing content ... */}
     </Box>
   );
 }
